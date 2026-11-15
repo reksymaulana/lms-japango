@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Kosakata · Japanese LMS{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-2">Pencarian kosakata</h1>
+<p class="text-slate-600 mb-6">Cari kata bahasa Jepang melalui Jisho. Hasil pencarian disimpan sebagai cache.</p>
+<form hx-get="/learning/vocabulary" hx-target="#vocabulary-results" hx-trigger="keyup changed delay:500ms, submit" hx-swap="innerHTML">
+  <label class="sr-only" for="vocab-query">Kata atau arti</label>
+  <input id="vocab-query" name="q" type="search" maxlength="100" value="{{ q }}" placeholder="Contoh: 食べる atau makan"
+         class="w-full rounded-lg border bg-white px-4 py-3" autocomplete="off">
+</form>
+<div id="vocabulary-results" class="mt-6">{% include "partials/vocabulary_results.html" %}</div>
+{% endblock %}

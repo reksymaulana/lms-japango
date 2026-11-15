@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Japanese LMS{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-2">Belajar bahasa Jepang</h1>
+<p class="text-slate-600 mb-8">Mulai perjalanan JLPT N5 hingga N3 dan pantau progres belajarmu.</p>
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  {% for level in ["N5", "N4", "N3"] %}
+  <a class="rounded-xl bg-white border p-5 hover:border-indigo-400" href="/learning/kanji?level={{ level }}">
+    <p class="text-sm text-slate-500">Kurikulum</p>
+    <h2 class="text-2xl font-semibold">{{ level }}</h2>
+    <p class="mt-2">{{ kanji_counts.get(level, 0) }} Kanji tersedia</p>
+  </a>
+  {% endfor %}
+  <div class="rounded-xl bg-white border p-5">
+    <p class="text-sm text-slate-500">Progres demo</p>
+    <h2 class="text-2xl font-semibold">{{ reviewed_count }} review</h2>
+    <p class="mt-2">{{ vocabulary_count }} kosakata tersimpan</p>
+  </div>
+</div>
+<div class="mt-8 flex flex-wrap gap-3">
+  <a class="rounded-lg bg-indigo-600 px-5 py-3 text-white font-medium" href="/review">Mulai review</a>
+  <a class="rounded-lg bg-white border px-5 py-3 font-medium" href="/learning/vocabulary">Cari kosakata</a>
+</div>
+{% endblock %}

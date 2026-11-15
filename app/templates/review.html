@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Review harian · Japanese LMS{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-2">Review harian</h1>
+<p class="text-slate-600 mb-6">Coba ingat jawabannya sebelum membuka kartu. Nilai 0–2 mengulang lebih cepat; 3–5 menambah interval.</p>
+<div id="flashcard">{% include "partials/flashcard.html" %}</div>
+{% endblock %}

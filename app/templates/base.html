@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Japanese LMS{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+  <nav class="bg-white border-b">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-wrap items-center gap-5">
+      <a class="font-bold text-indigo-700" href="/">Japanese LMS</a>
+      <a href="/learning/kanji">Kanji</a>
+      <a href="/learning/vocabulary">Kosakata</a>
+      <a href="/learning/grammar">Tata bahasa</a>
+      <a href="/review">Review</a>
+    </div>
+  </nav>
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    {% block content %}{% endblock %}
+  </main>
+  <script>
+    function speakJapanese(text) {
+      if (!("speechSynthesis" in window)) {
+        alert("Browser ini tidak mendukung Web Speech API.");
+        return;
+      }
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ja-JP";
+      window.speechSynthesis.speak(utterance);
+    }
+  </script>
+</body>
+</html>

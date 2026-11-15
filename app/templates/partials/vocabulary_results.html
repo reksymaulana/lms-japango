@@ -1,0 +1,15 @@
+{% if vocabulary_list %}
+<div class="grid gap-3 sm:grid-cols-2">
+  {% for item in vocabulary_list %}
+  <article class="rounded-xl bg-white border p-5">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="text-2xl font-semibold">{{ item.word }}</h2>
+      {% if item.reading %}<button class="text-sm text-indigo-700" data-text="{{ item.reading }}" onclick="speakJapanese(this.dataset.text)">▶ {{ item.reading }}</button>{% endif %}
+    </div>
+    <p class="mt-2 text-slate-600">{{ item.meanings|join(", ") or "Arti belum tersedia" }}</p>
+  </article>
+  {% endfor %}
+</div>
+{% elif request.query_params.get("q") %}
+<p class="rounded-lg bg-white border p-4 text-slate-600">Tidak ada hasil ditemukan.</p>
+{% endif %}
