@@ -7,16 +7,21 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
-from app.i18n import create_templates
+from app.i18n import TRANSLATIONS, create_templates, get_language
 from app.models import Kanji, UserItemProgress, Vocabulary
 from app.schemas import ReviewAnswer
 from app.services.srs_service import calculate_next_review
+from app.services.translation_service import translate_meaning_groups
 
 router = APIRouter(prefix="/review", tags=["review"])
 templates = create_templates(Path(__file__).resolve().parents[1] / "templates")
 
 
-async def _next_card(session: AsyncSession, learner_id: str) -> dict[str, str] | None:
+async def _next_card(
+    session: AsyncSession,
+    learner_id: str,
+    language: str,
+) -> tuple[dict[str, str] | None, bool]:
     now = datetime.now(timezone.utc)
     for item_type, model, item_id_column in (
         ("kanji", Kanji, Kanji.character),
@@ -36,24 +41,42 @@ async def _next_card(session: AsyncSession, learner_id: str) -> dict[str, str] |
         )
         if item is None:
             continue
+        item_key = item.character if item_type == "kanji" else item.word
+        localized_meanings, translation_unavailable = await translate_meaning_groups(
+            session,
+            {item_key: item.meanings},
+            language,
+        )
+        if language == "id":
+            await session.commit()
+        back = (
+            localized_meanings.get(item_key)
+            or "、".join(item.meanings)
+            or TRANSLATIONS[language]["not_available"]
+        )
         if item_type == "kanji":
-            back = "、".join(item.meanings) or "Belum ada arti"
             pronunciation = item.kunyomi[0] if item.kunyomi else item.onyomi[0] if item.onyomi else item.character
-            return {
+            return (
+                {
+                    "item_type": item_type,
+                    "item_id": item.character,
+                    "front": item.character,
+                    "back": back,
+                    "pronunciation": pronunciation,
+                },
+                translation_unavailable,
+            )
+        return (
+            {
                 "item_type": item_type,
-                "item_id": item.character,
-                "front": item.character,
+                "item_id": item.word,
+                "front": item.word,
                 "back": back,
-                "pronunciation": pronunciation,
-            }
-        return {
-            "item_type": item_type,
-            "item_id": item.word,
-            "front": item.word,
-            "back": "、".join(item.meanings) or "Belum ada arti",
-            "pronunciation": item.reading or item.word,
-        }
-    return None
+                "pronunciation": item.reading or item.word,
+            },
+            translation_unavailable,
+        )
+    return None, False
 
 
 @router.get("", response_class=HTMLResponse)
@@ -62,11 +85,19 @@ async def review_page(
     learner_id: str = "demo",
     session: AsyncSession = Depends(get_session),
 ) -> HTMLResponse:
-    card = await _next_card(session, learner_id)
+    card, translation_unavailable = await _next_card(
+        session,
+        learner_id,
+        get_language(request),
+    )
     return templates.TemplateResponse(
         request=request,
         name="review.html",
-        context={"card": card, "learner_id": learner_id},
+        context={
+            "card": card,
+            "learner_id": learner_id,
+            "translation_unavailable": translation_unavailable,
+        },
     )
 
 
@@ -119,9 +150,18 @@ async def submit_answer(
     progress.last_reviewed_at = datetime.now(timezone.utc)
     await session.commit()
 
-    card = await _next_card(session, answer.learner_id)
+    card, translation_unavailable = await _next_card(
+        session,
+        answer.learner_id,
+        get_language(request),
+    )
     return templates.TemplateResponse(
         request=request,
         name="partials/flashcard.html",
-        context={"card": card, "learner_id": answer.learner_id, "answered": True},
+        context={
+            "card": card,
+            "learner_id": answer.learner_id,
+            "answered": True,
+            "translation_unavailable": translation_unavailable,
+        },
     )

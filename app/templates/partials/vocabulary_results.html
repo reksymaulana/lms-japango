@@ -1,3 +1,6 @@
+{% if translation_unavailable %}
+<p class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="status">{{ t.translation_unavailable }}</p>
+{% endif %}
 {% if vocabulary_list %}
 <div class="mb-3 flex items-center justify-between">
   <h2 class="font-semibold text-slate-800">{{ t.search_results }}</h2>
@@ -16,7 +19,7 @@
     </div>
     <div class="mt-4 border-t border-slate-100 pt-3">
       <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t.meaning }}</p>
-      <p class="mt-1 leading-6 text-slate-700">{{ item.meanings|join(", ") or t.not_available }}</p>
+      <p class="mt-1 leading-6 text-slate-700">{{ localized_meanings.get(item.word) or item.meanings|join(", ") or t.not_available }}</p>
     </div>
   </article>
   {% endfor %}
@@ -53,7 +56,7 @@
     </div>
     <div class="mt-4 border-t border-slate-100 pt-3">
       <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t.meaning }}</p>
-      <p class="mt-1 leading-6 text-slate-700">{{ item.meanings|join(", ") or t.not_available }}</p>
+      <p class="mt-1 leading-6 text-slate-700">{{ localized_meanings.get(item.word) or item.meanings|join(", ") or t.not_available }}</p>
     </div>
   </article>
   {% endfor %}

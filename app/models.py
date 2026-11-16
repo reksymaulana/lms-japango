@@ -31,6 +31,24 @@ class Vocabulary(Base):
     source: Mapped[str] = mapped_column(String(32), default="jisho")
 
 
+class TranslationCache(Base):
+    __tablename__ = "translation_cache"
+    __table_args__ = (
+        UniqueConstraint(
+            "source_text",
+            "source_language",
+            "target_language",
+            name="uq_translation_cache_language_pair",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    source_text: Mapped[str] = mapped_column(Text)
+    source_language: Mapped[str] = mapped_column(String(5), default="en")
+    target_language: Mapped[str] = mapped_column(String(5))
+    translated_text: Mapped[str] = mapped_column(Text)
+
+
 class Bunpou(Base):
     __tablename__ = "bunpou"
 

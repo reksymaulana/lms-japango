@@ -10,6 +10,7 @@ from app.database import get_session
 from app.i18n import GRAMMAR_ENGLISH, create_templates, get_language
 from app.models import Bunpou, Kanji, Vocabulary
 from app.services.external_api import search_jisho
+from app.services.translation_service import translate_meaning_groups
 
 router = APIRouter(prefix="/learning", tags=["learning"])
 templates = create_templates(Path(__file__).resolve().parents[1] / "templates")
@@ -49,8 +50,19 @@ async def kanji_list(
         .offset((page - 1) * PAGE_SIZE)
         .limit(PAGE_SIZE)
     )
+    kanji_list = result.all()
+    language = get_language(request)
+    localized_meanings, translation_unavailable = await translate_meaning_groups(
+        session,
+        {kanji.character: kanji.meanings for kanji in kanji_list},
+        language,
+    )
+    if language == "id":
+        await session.commit()
     context = {
-        "kanji_list": result.all(),
+        "kanji_list": kanji_list,
+        "localized_meanings": localized_meanings,
+        "translation_unavailable": translation_unavailable,
         "level": level,
         "q": query,
         "page": page,
@@ -87,6 +99,15 @@ async def vocabulary_search(
             .offset((page - 1) * PAGE_SIZE)
             .limit(PAGE_SIZE)
         )
+        saved_vocabulary_list = result.all()
+        language = get_language(request)
+        localized_meanings, translation_unavailable = await translate_meaning_groups(
+            session,
+            {item.word: item.meanings for item in saved_vocabulary_list},
+            language,
+        )
+        if language == "id":
+            await session.commit()
         context = {
             "q": "",
             "page": page,
@@ -94,7 +115,9 @@ async def vocabulary_search(
             "total": total,
             "first_item": (page - 1) * PAGE_SIZE + 1 if total else 0,
             "last_item": min(page * PAGE_SIZE, total),
-            "saved_vocabulary_list": result.all(),
+            "saved_vocabulary_list": saved_vocabulary_list,
+            "localized_meanings": localized_meanings,
+            "translation_unavailable": translation_unavailable,
         }
         if request.headers.get("HX-Request") != "true":
             return templates.TemplateResponse(
@@ -137,6 +160,15 @@ async def vocabulary_search(
         await session.commit()
         vocabulary_list = cached_results
 
+    language = get_language(request)
+    localized_meanings, translation_unavailable = await translate_meaning_groups(
+        session,
+        {item.word: item.meanings for item in vocabulary_list},
+        language,
+    )
+    if language == "id":
+        await session.commit()
+
     return templates.TemplateResponse(
         request=request,
         name=(
@@ -150,6 +182,8 @@ async def vocabulary_search(
             "page": page,
             "has_previous": page > 1,
             "has_next": has_next,
+            "localized_meanings": localized_meanings,
+            "translation_unavailable": translation_unavailable,
         },
     )
 

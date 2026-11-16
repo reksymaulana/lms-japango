@@ -120,6 +120,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "enable_dark_theme": "Aktifkan tema gelap",
         "enable_light_theme": "Aktifkan tema terang",
         "toggle_theme": "Ganti tema",
+        "translation_unavailable": "Sebagian arti masih ditampilkan dalam bahasa Inggris karena layanan terjemahan sedang tidak tersedia.",
     },
     "en": {
         "language": "Language",
@@ -236,6 +237,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "enable_dark_theme": "Enable dark theme",
         "enable_light_theme": "Enable light theme",
         "toggle_theme": "Toggle theme",
+        "translation_unavailable": "Some meanings are shown in English because the translation service is temporarily unavailable.",
     },
 }
 
