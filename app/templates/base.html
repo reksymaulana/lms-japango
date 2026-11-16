@@ -204,8 +204,8 @@
           </a>
         {% endif %}
         {% if current_user %}
-        <a href="/auth/signup" {% if current_path.startswith("/auth") %}aria-current="page"{% endif %}
-           class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if current_path.startswith("/auth") %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+        <a href="/account" {% if current_path == "/account" %}aria-current="page"{% endif %}
+           class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if current_path == "/account" %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
           {{ t.nav_account }}
         </a>
         {% endif %}

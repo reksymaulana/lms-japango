@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ t.nav_account }} · Japango{% endblock %}
+{% block content %}
+<section class="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9">
+  <p class="text-sm font-semibold text-indigo-600">Japango</p>
+  <h1 class="mt-2 text-2xl font-bold tracking-tight">{{ t.account_title }}</h1>
+  <dl class="mt-6 space-y-4">
+    {% if account.name %}
+    <div>
+      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t.account_name }}</dt>
+      <dd class="mt-1 font-medium">{{ account.name }}</dd>
+    </div>
+    {% endif %}
+    {% if account.email %}
+    <div>
+      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t.account_email }}</dt>
+      <dd class="mt-1 break-all font-medium">{{ account.email }}</dd>
+    </div>
+    {% endif %}
+    <div>
+      <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ t.account_role }}</dt>
+      <dd class="mt-1 font-medium">{{ t.auth_role_sensei if account.role == "sensei" else t.auth_role_student }}</dd>
+    </div>
+  </dl>
+  <div class="mt-8 flex flex-wrap gap-3">
+    <a href="{{ dashboard_path }}" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">{{ t.auth_open_dashboard }}</a>
+    <form method="post" action="/auth/logout">
+      <button type="submit" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">{{ t.auth_signout }}</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

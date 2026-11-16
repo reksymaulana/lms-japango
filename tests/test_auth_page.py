@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import httpx
 
-from app.auth import get_optional_current_account
+from app.auth import get_current_account, get_optional_current_account
 from app.main import app
 
 
@@ -95,6 +95,7 @@ class AuthPageTests(IsolatedAsyncioTestCase):
         self.assertIn('href="/sensei/materials"', sensei_navigation)
         self.assertIn('href="/sensei/quizzes"', sensei_navigation)
         self.assertIn('href="/sensei/students"', sensei_navigation)
+        self.assertIn('href="/account"', sensei_navigation)
         self.assertNotIn('href="/student/materials"', sensei_navigation)
 
     async def test_public_pages_show_the_authenticated_role_navigation(self) -> None:
@@ -129,6 +130,11 @@ class AuthPageTests(IsolatedAsyncioTestCase):
             get_optional_current_account,
             None,
         )
+        self.addCleanup(
+            app.dependency_overrides.pop,
+            get_current_account,
+            None,
+        )
         with patch("app.main.SessionLocal", side_effect=EmptySession):
             async with httpx.AsyncClient(
                 transport=httpx.ASGITransport(app=app),
@@ -146,12 +152,21 @@ class AuthPageTests(IsolatedAsyncioTestCase):
                     app.dependency_overrides[get_optional_current_account] = (
                         authenticated_account
                     )
+                    app.dependency_overrides[get_current_account] = (
+                        authenticated_account
+                    )
                     home = await client.get("/")
-                    account_page = await client.get("/auth/signup")
+                    account_page = await client.get("/account")
+                    signup_page = await client.get("/auth/signup")
 
                     self.assertEqual(home.status_code, 303)
                     self.assertEqual(home.headers["location"], dashboard_path)
                     self.assertEqual(account_page.status_code, 200)
+                    self.assertIn("Informasi akun", account_page.text)
+                    self.assertNotIn('id="signup-form"', account_page.text)
+                    self.assertNotIn('id="signin-form"', account_page.text)
+                    self.assertEqual(signup_page.status_code, 303)
+                    self.assertEqual(signup_page.headers["location"], "/account")
                     navigation = (
                         account_page.text.split(
                             '<div id="primary-navigation"', 1
@@ -159,6 +174,7 @@ class AuthPageTests(IsolatedAsyncioTestCase):
                     )
                     self.assertIn(f'href="{dashboard_path}"', navigation)
                     self.assertNotIn(f'href="{other_path}"', navigation)
+                    self.assertIn('href="/account"', account_page.text)
                     self.assertIn(
                         "Siswa" if role == "student" else "Sensei",
                         navigation,

@@ -77,9 +77,13 @@ async def auth_unavailable(_: Request, exc: AuthUnavailable) -> JSONResponse:
 @app.get(
     "/auth/signup",
     response_class=HTMLResponse,
-    dependencies=[Depends(get_optional_current_account)],
 )
-async def auth_signup(request: Request) -> HTMLResponse:
+async def auth_signup(
+    request: Request,
+    current_user: AppUser | None = Depends(get_optional_current_account),
+) -> Response:
+    if current_user is not None:
+        return RedirectResponse(url="/account", status_code=303)
     return_to = request.query_params.get("next", "")
     if (
         not return_to.startswith("/")
@@ -93,6 +97,22 @@ async def auth_signup(request: Request) -> HTMLResponse:
         context={
             "auth_base_url": settings.neon_auth_base_url,
             "return_to": return_to,
+        },
+    )
+
+
+@app.get("/account", response_class=HTMLResponse)
+async def account_page(
+    request: Request,
+    account: AppUser = Depends(get_current_account),
+) -> HTMLResponse:
+    dashboard_path = "/sensei" if account.role == "sensei" else "/student"
+    return templates.TemplateResponse(
+        request=request,
+        name="account.html",
+        context={
+            "account": account,
+            "dashboard_path": dashboard_path,
         },
     )
 
