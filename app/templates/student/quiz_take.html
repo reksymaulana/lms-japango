@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.title }} · Japango{% endblock %}
+{% block content %}
+<a href="/student/quizzes" class="text-sm font-semibold text-indigo-700">← {{ t.back_to_quizzes }}</a>
+<section class="mt-4 rounded-3xl border border-slate-200 bg-white p-6 sm:p-9">
+  <h1 class="text-3xl font-bold">{{ quiz.title }}</h1>
+  {% if quiz.description %}<p class="mt-2 text-slate-500">{{ quiz.description }}</p>{% endif %}
+  <form method="post" action="/student/quizzes/{{ quiz.id }}/submit" class="mt-7 space-y-6">
+    {% for question in questions %}
+    <fieldset class="rounded-2xl border border-slate-200 p-5">
+      <legend class="px-2 text-sm font-semibold text-indigo-700">{{ t.question_number }} {{ loop.index }} · {{ question.points }} {{ t.points }}</legend>
+      <p class="mt-1 font-semibold">{{ question.prompt }}</p>
+      {% if question.question_type == "multiple_choice" %}
+      <div class="mt-4 grid gap-2">
+        {% for option in question.options %}
+        <label class="flex items-start gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm hover:bg-slate-50">
+          <input type="radio" name="question_{{ question.id }}" value="{{ option }}" required class="mt-0.5 h-4 w-4 border-slate-300 text-indigo-600">
+          <span>{{ option }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% else %}
+      <textarea name="question_{{ question.id }}" maxlength="5000" rows="3" required aria-label="{{ t.written_answer }}" class="mt-4 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5"></textarea>
+      {% endif %}
+    </fieldset>
+    {% endfor %}
+    <button type="submit" class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">{{ t.submit_quiz }}</button>
+  </form>
+</section>
+{% endblock %}

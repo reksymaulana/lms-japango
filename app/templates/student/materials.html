@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ t.learning_materials }} · Japango{% endblock %}
+{% block content %}
+<div>
+  <p class="text-sm font-semibold text-indigo-600">{{ t.student_dashboard_title }}</p>
+  <h1 class="mt-1 text-3xl font-bold">{{ t.learning_materials }}</h1>
+</div>
+<div class="mt-6 grid gap-4 md:grid-cols-2">
+  {% for item in materials %}
+  <article class="rounded-2xl border border-slate-200 bg-white p-5">
+    {% if item.category %}<p class="text-xs font-bold uppercase tracking-wide text-indigo-600">{{ item.category.name }}</p>{% endif %}
+    <h2 class="mt-2 text-xl font-bold">{{ item.material.title }}</h2>
+    <p class="mt-2 text-sm leading-6 text-slate-600">{{ item.material.summary }}</p>
+    <a class="mt-5 inline-flex rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white" href="/student/materials/{{ item.material.id }}">{{ t.read_material }}</a>
+  </article>
+  {% else %}
+  <p class="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">{{ t.no_published_materials }}</p>
+  {% endfor %}
+</div>
+{% endblock %}

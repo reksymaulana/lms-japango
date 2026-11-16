@@ -1,7 +1,7 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Bunpou
+from app.models import AppState, Bunpou
 
 STARTER_GRAMMAR = [
     {
@@ -116,12 +116,11 @@ STARTER_GRAMMAR = [
 
 
 async def seed_grammar(session: AsyncSession) -> None:
-    existing_titles = set(await session.scalars(select(Bunpou.title)))
-    new_entries = [
-        Bunpou(**entry)
-        for entry in STARTER_GRAMMAR
-        if entry["title"] not in existing_titles
-    ]
-    if new_entries:
-        session.add_all(new_entries)
-        await session.commit()
+    seed_state = await session.get(AppState, "starter_grammar_seeded")
+    if seed_state is not None:
+        return
+    existing_count = await session.scalar(select(func.count()).select_from(Bunpou))
+    if not existing_count:
+        session.add_all(Bunpou(**entry) for entry in STARTER_GRAMMAR)
+    session.add(AppState(key="starter_grammar_seeded", value="true"))
+    await session.commit()

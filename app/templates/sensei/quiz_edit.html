@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.title }} · {{ t.manage_quizzes }}{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-end justify-between gap-3">
+  <div><p class="text-sm font-semibold text-indigo-600">{{ t.manage_quizzes }}</p><h1 class="mt-1 text-3xl font-bold">{{ quiz.title }}</h1></div>
+  <a class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-indigo-700" href="/sensei/quizzes">{{ t.back_to_quizzes }}</a>
+</div>
+{% if message %}<p class="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ message }}</p>{% endif %}
+<section class="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+  <h2 class="text-xl font-bold">{{ t.quiz_settings }}</h2>
+  <form method="post" action="/sensei/quizzes/{{ quiz.id }}/edit" class="mt-5 grid gap-4">
+    <label class="text-sm font-semibold">{{ t.title_label }}<input name="title" value="{{ quiz.title }}" maxlength="255" required class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5"></label>
+    <label class="text-sm font-semibold">{{ t.description_label }}<textarea name="description" maxlength="1000" rows="2" class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5">{{ quiz.description }}</textarea></label>
+    <label class="text-sm font-semibold">{{ t.category_label }}
+      <select name="category_id" class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5">
+        <option value="">{{ t.no_category }}</option>
+        {% for category in categories %}<option value="{{ category.id }}" {% if quiz.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="published" value="true" {% if quiz.published %}checked{% endif %} class="h-4 w-4 rounded border-slate-300 text-indigo-600">{{ t.publish_quiz }}</label>
+    <button class="w-fit rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white" type="submit">{{ t.save }}</button>
+  </form>
+</section>
+
+<section class="mt-7 rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+  <h2 class="text-xl font-bold">{{ t.question_form_title }}</h2>
+  {% if edit_question %}<p class="mt-2 text-sm text-amber-700">{{ t.question_edit_warning }}</p>{% endif %}
+  <form method="post" action="{% if edit_question %}/sensei/quizzes/{{ quiz.id }}/questions/{{ edit_question.id }}/edit{% else %}/sensei/quizzes/{{ quiz.id }}/questions{% endif %}" class="mt-5 grid gap-4">
+    <label class="text-sm font-semibold">{{ t.question_prompt }}<textarea name="prompt" maxlength="5000" rows="3" required class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5">{{ edit_question.prompt if edit_question else '' }}</textarea></label>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <label class="text-sm font-semibold">{{ t.question_type }}
+        <select name="question_type" required class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5">
+          <option value="multiple_choice" {% if edit_question and edit_question.question_type == "multiple_choice" %}selected{% endif %}>{{ t.multiple_choice }}</option>
+          <option value="written" {% if edit_question and edit_question.question_type == "written" %}selected{% endif %}>{{ t.written_answer }}</option>
+        </select>
+      </label>
+      <label class="text-sm font-semibold">{{ t.points }}<input name="points" type="number" min="1" max="100" value="{{ edit_question.points if edit_question else 1 }}" required class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5"></label>
+    </div>
+    <label class="text-sm font-semibold">{{ t.question_options }}<textarea name="options" maxlength="5000" rows="4" placeholder="{{ t.options_help }}" class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5">{% if edit_question %}{{ edit_question.options | join('\n') }}{% endif %}</textarea><span class="mt-1 block text-xs font-normal text-slate-500">{{ t.options_help }}</span></label>
+    <label class="text-sm font-semibold">{{ t.answer_key }}<input name="answer_key" value="{{ edit_question.answer_key if edit_question else '' }}" maxlength="5000" required class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5"><span class="mt-1 block text-xs font-normal text-slate-500">{{ t.answer_key_help }}</span></label>
+    <div class="flex gap-2">
+      <button class="w-fit rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white" type="submit">{{ t.save_question }}</button>
+      {% if edit_question %}<a class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold" href="/sensei/quizzes/{{ quiz.id }}">{{ t.cancel }}</a>{% endif %}
+    </div>
+  </form>
+</section>
+
+<section class="mt-7">
+  <h2 class="text-xl font-bold">{{ t.quiz_questions }}</h2>
+  <div class="mt-4 grid gap-3">
+    {% for question in questions %}
+    <article class="rounded-2xl border border-slate-200 bg-white p-5">
+      <div class="flex flex-wrap justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold text-indigo-600">{{ t.question_number }} {{ loop.index }} · {{ question.points }} {{ t.points }}</p>
+          <h3 class="mt-1 font-bold">{{ question.prompt }}</h3>
+          <p class="mt-2 text-sm text-slate-500">{{ t.multiple_choice if question.question_type == "multiple_choice" else t.written_answer }}</p>
+        </div>
+        <div class="flex gap-2">
+          <a class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-indigo-700" href="/sensei/quizzes/{{ quiz.id }}?edit_question_id={{ question.id }}">{{ t.edit }}</a>
+          <form method="post" action="/sensei/quizzes/{{ quiz.id }}/questions/{{ question.id }}/delete" onsubmit="return confirm('{{ t.confirm_delete }}')">
+            <button class="rounded-lg border border-rose-200 px-3 py-2 text-sm font-semibold text-rose-700" type="submit">{{ t.delete }}</button>
+          </form>
+        </div>
+      </div>
+    </article>
+    {% else %}
+    <p class="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">{{ t.no_questions }}</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

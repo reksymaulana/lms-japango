@@ -94,14 +94,24 @@
         <span><span class="text-lg">Japango</span><span class="ml-2 hidden text-xs font-medium text-slate-400 sm:inline"> · {{ t.tagline }}</span></span>
       </a>
       <div id="primary-navigation" class="order-3 -mx-4 hidden w-full flex-col gap-1 border-t border-slate-100 px-4 pt-3 lg:order-none lg:mx-0 lg:flex lg:w-auto lg:flex-1 lg:flex-row lg:justify-center lg:gap-1 lg:border-t-0 lg:px-0 lg:pt-0">
-        {% for href, label, active in [
-          ("/", t.nav_home, current_path == "/"),
+        {% set navigation_items = [
+          ("/", t.nav_home, current_path == "/")
+        ] %}
+        {% if current_user %}
+          {% if current_user.role == "sensei" %}
+            {% set navigation_items = navigation_items + [("/sensei", t.nav_sensei_dashboard, current_path.startswith("/sensei"))] %}
+          {% else %}
+            {% set navigation_items = navigation_items + [("/student", t.nav_student_dashboard, current_path.startswith("/student"))] %}
+          {% endif %}
+        {% endif %}
+        {% set navigation_items = navigation_items + [
           ("/learning/kanji", t.nav_kanji, current_path == "/learning/kanji"),
           ("/learning/vocabulary", t.nav_vocabulary, current_path == "/learning/vocabulary"),
           ("/learning/grammar", t.nav_grammar, current_path == "/learning/grammar"),
           ("/review", t.nav_review, current_path.startswith("/review")),
           ("/auth/signup", t.nav_account, current_path.startswith("/auth"))
         ] %}
+        {% for href, label, active in navigation_items %}
         <a href="{{ href }}" {% if active %}aria-current="page"{% endif %}
            class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
           {{ label }}

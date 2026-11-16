@@ -6,13 +6,18 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import get_current_account
 from app.database import get_session
 from app.i18n import GRAMMAR_ENGLISH, create_templates, get_language
 from app.models import Bunpou, Kanji, Vocabulary
 from app.services.external_api import search_jisho
 from app.services.translation_service import translate_meaning_groups
 
-router = APIRouter(prefix="/learning", tags=["learning"])
+router = APIRouter(
+    prefix="/learning",
+    tags=["learning"],
+    dependencies=[Depends(get_current_account)],
+)
 templates = create_templates(Path(__file__).resolve().parents[1] / "templates")
 PAGE_SIZE = 25
 JISHO_PAGE_SIZE = 10

@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     app_name: str = "Japango"
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/japanese_lms"
     neon_auth_base_url: str = ""
+    neon_auth_jwks_url: str = ""
     kanji_api_base_url: str = "https://kanjiapi.dev/v1"
     jisho_api_url: str = "https://jisho.org/api/v1/search/words"
     translation_api_url: str = "https://api.mymemory.translated.net/get"

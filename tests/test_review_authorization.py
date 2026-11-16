@@ -5,7 +5,11 @@ import httpx
 
 from app.database import get_session
 from app.main import app
-from app.models import DEMO_LEARNER_ID
+from app.auth import get_current_account
+from app.models import AppUser
+
+
+LEARNER_ID = "authenticated-student"
 
 
 class FakeSession:
@@ -29,16 +33,21 @@ class ReviewAuthorizationTests(IsolatedAsyncioTestCase):
         async def override_session():
             yield self.session
 
+        async def override_account():
+            return AppUser(auth_user_id=LEARNER_ID, role="student")
+
         self.session = FakeSession([])
         app.dependency_overrides[get_session] = override_session
+        app.dependency_overrides[get_current_account] = override_account
         self.addCleanup(app.dependency_overrides.pop, get_session, None)
+        self.addCleanup(app.dependency_overrides.pop, get_current_account, None)
         self.client = httpx.AsyncClient(
             transport=httpx.ASGITransport(app=app),
             base_url="http://testserver",
         )
         self.addAsyncCleanup(self.client.aclose)
 
-    async def test_review_page_ignores_client_supplied_learner_id(self) -> None:
+    async def test_review_page_uses_authenticated_learner_id(self) -> None:
         with patch(
             "app.routers.review._next_card",
             new_callable=AsyncMock,
@@ -47,9 +56,9 @@ class ReviewAuthorizationTests(IsolatedAsyncioTestCase):
             response = await self.client.get("/review?learner_id=another-learner")
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(next_card.await_args.args[1], DEMO_LEARNER_ID)
+        self.assertEqual(next_card.await_args.args[1], LEARNER_ID)
 
-    async def test_answer_uses_server_selected_demo_learner(self) -> None:
+    async def test_answer_uses_authenticated_learner_id(self) -> None:
         self.session = FakeSession([None, "日"])
 
         with patch(
@@ -69,6 +78,6 @@ class ReviewAuthorizationTests(IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(self.session.added), 1)
-        self.assertEqual(self.session.added[0].learner_id, DEMO_LEARNER_ID)
+        self.assertEqual(self.session.added[0].learner_id, LEARNER_ID)
         self.assertTrue(self.session.committed)
-        self.assertEqual(next_card.await_args.args[1], DEMO_LEARNER_ID)
+        self.assertEqual(next_card.await_args.args[1], LEARNER_ID)

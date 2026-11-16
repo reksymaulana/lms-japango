@@ -9,6 +9,10 @@ if (root) {
   const signinForm = document.getElementById("signin-form");
   const sessionPanel = document.getElementById("auth-session");
   const userEmail = document.getElementById("auth-user-email");
+  const userRole = document.getElementById("auth-user-role");
+  const userIdLabel = document.getElementById("auth-user-id-label");
+  const userId = document.getElementById("auth-user-id");
+  const dashboardLink = document.getElementById("auth-dashboard-link");
   const signoutButton = document.getElementById("signout-button");
   const signupTab = document.getElementById("show-signup");
   const signinTab = document.getElementById("show-signin");
@@ -27,10 +31,22 @@ if (root) {
     sessionPanel.hidden = true;
   }
 
-  function showSession(user) {
+  function showSession(user, appSession) {
     forms.hidden = true;
     sessionPanel.hidden = false;
-    userEmail.textContent = user.email;
+    userEmail.textContent = user.email || "";
+    userIdLabel.textContent = root.dataset.userIdLabel;
+    userId.textContent = user.id || "";
+    if (appSession) {
+      userRole.textContent = appSession.role === "sensei"
+        ? root.dataset.roleSensei
+        : root.dataset.roleStudent;
+      dashboardLink.href = appSession.redirect_url || "/dashboard";
+      dashboardLink.hidden = false;
+    } else {
+      userRole.textContent = "";
+      dashboardLink.hidden = true;
+    }
   }
 
   function showMode(mode) {
@@ -59,12 +75,34 @@ if (root) {
       }
 
       const user = data?.user;
-      if (user) {
-        showSession(user);
-      } else {
+      const token = data?.session?.token;
+      if (!user || !token) {
         showForms();
+        return null;
       }
-      return user || null;
+
+      const response = await fetch("/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: token }),
+      });
+      if (!response.ok) {
+        showSession(user, null);
+        showStatus(root.dataset.sessionError, true);
+        return null;
+      }
+
+      const appSession = await response.json();
+      showSession(user, appSession);
+      return appSession;
+    }
+
+    function redirectAfterLogin(appSession) {
+      const returnTo = root.dataset.returnTo;
+      const destination = returnTo.startsWith("/") && !returnTo.startsWith("//")
+        ? returnTo
+        : appSession.redirect_url || "/dashboard";
+      window.location.assign(destination);
     }
 
     async function submitCredentials(form, operation) {
@@ -85,11 +123,9 @@ if (root) {
           return;
         }
 
-        const user = await readCurrentUser();
-        if (user) {
-          if (operation === "signUp") {
-            showStatus(root.dataset.signupSuccess);
-          }
+        const appSession = await readCurrentUser();
+        if (appSession) {
+          redirectAfterLogin(appSession);
         } else if (operation === "signUp") {
           showStatus(root.dataset.verificationPending);
         } else {
@@ -116,12 +152,22 @@ if (root) {
     signoutButton.addEventListener("click", async () => {
       signoutButton.disabled = true;
       try {
-        const { error } = await auth.signOut();
-        if (error) {
-          showStatus(error.message || root.dataset.genericError, true);
+        let providerError = null;
+        try {
+          const result = await auth.signOut();
+          providerError = result.error;
+        } catch (error) {
+          providerError = error;
+        }
+        const response = await fetch("/auth/logout", { method: "POST" });
+        if (!response.ok) {
+          throw new Error(root.dataset.genericError);
+        }
+        showForms();
+        if (providerError) {
+          showStatus(providerError.message || root.dataset.genericError, true);
           return;
         }
-        await readCurrentUser();
         showStatus(root.dataset.signedOut);
       } catch (error) {
         showStatus(error?.message || root.dataset.genericError, true);
@@ -131,9 +177,15 @@ if (root) {
     });
 
     showMode("signup");
-    void readCurrentUser().catch((error) => {
-      showForms();
-      showStatus(error?.message || root.dataset.sessionError, true);
-    });
+    void readCurrentUser()
+      .then((appSession) => {
+        if (appSession && root.dataset.refresh === "true") {
+          redirectAfterLogin(appSession);
+        }
+      })
+      .catch((error) => {
+        showForms();
+        showStatus(error?.message || root.dataset.sessionError, true);
+      });
   }
 }

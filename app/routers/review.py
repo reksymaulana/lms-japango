@@ -6,9 +6,10 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import get_current_account
 from app.database import get_session
 from app.i18n import TRANSLATIONS, create_templates, get_language
-from app.models import DEMO_LEARNER_ID, Kanji, UserItemProgress, Vocabulary
+from app.models import AppUser, Kanji, UserItemProgress, Vocabulary
 from app.schemas import ReviewAnswer
 from app.services.srs_service import calculate_next_review
 from app.services.translation_service import translate_meaning_groups
@@ -82,11 +83,12 @@ async def _next_card(
 @router.get("", response_class=HTMLResponse)
 async def review_page(
     request: Request,
+    account: AppUser = Depends(get_current_account),
     session: AsyncSession = Depends(get_session),
 ) -> HTMLResponse:
     card, translation_unavailable = await _next_card(
         session,
-        DEMO_LEARNER_ID,
+        account.auth_user_id,
         get_language(request),
     )
     return templates.TemplateResponse(
@@ -105,6 +107,7 @@ async def submit_answer(
     item_type: str = Form(),
     item_id: str = Form(min_length=1, max_length=255),
     quality: int = Form(ge=0, le=5),
+    account: AppUser = Depends(get_current_account),
     session: AsyncSession = Depends(get_session),
 ) -> HTMLResponse:
     answer = ReviewAnswer(
@@ -114,7 +117,7 @@ async def submit_answer(
     )
     progress = await session.scalar(
         select(UserItemProgress).where(
-            UserItemProgress.learner_id == DEMO_LEARNER_ID,
+            UserItemProgress.learner_id == account.auth_user_id,
             UserItemProgress.item_type == answer.item_type,
             UserItemProgress.item_id == answer.item_id,
         )
@@ -128,7 +131,7 @@ async def submit_answer(
         if item_exists is None:
             raise HTTPException(status_code=404, detail="Kartu tidak ditemukan")
         progress = UserItemProgress(
-            learner_id=DEMO_LEARNER_ID,
+            learner_id=account.auth_user_id,
             item_type=answer.item_type,
             item_id=answer.item_id,
             repetitions=0,
@@ -148,7 +151,7 @@ async def submit_answer(
 
     card, translation_unavailable = await _next_card(
         session,
-        DEMO_LEARNER_ID,
+        account.auth_user_id,
         get_language(request),
     )
     return templates.TemplateResponse(
