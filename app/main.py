@@ -11,6 +11,7 @@ from app.config import settings
 from app.database import SessionLocal, engine
 from app.models import Base, Kanji, UserItemProgress, Vocabulary
 from app.routers import learning, review
+from app.services.grammar_seed import seed_grammar
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
@@ -19,6 +20,8 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
+    async with SessionLocal() as session:
+        await seed_grammar(session)
     yield
     await engine.dispose()
 
