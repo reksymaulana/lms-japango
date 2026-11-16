@@ -81,3 +81,21 @@ class ReviewAuthorizationTests(IsolatedAsyncioTestCase):
         self.assertEqual(self.session.added[0].learner_id, LEARNER_ID)
         self.assertTrue(self.session.committed)
         self.assertEqual(next_card.await_args.args[1], LEARNER_ID)
+
+    async def test_sensei_cannot_access_student_review_or_submit_answers(self) -> None:
+        async def override_sensei():
+            return AppUser(auth_user_id="sensei-account", role="sensei")
+
+        app.dependency_overrides[get_current_account] = override_sensei
+
+        review_page = await self.client.get("/review")
+        answer_submission = await self.client.post(
+            "/review/answer",
+            data={"item_type": "kanji", "item_id": "日", "quality": "3"},
+        )
+
+        for response in (review_page, answer_submission):
+            self.assertEqual(response.status_code, 303)
+            self.assertEqual(response.headers["location"], "/dashboard")
+        self.assertEqual(self.session.added, [])
+        self.assertFalse(self.session.committed)

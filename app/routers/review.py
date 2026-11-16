@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import get_current_account
+from app.auth import get_current_account, require_role
 from app.database import get_session
 from app.i18n import TRANSLATIONS, create_templates, get_language
 from app.models import AppUser, Kanji, UserItemProgress, Vocabulary
@@ -14,7 +14,11 @@ from app.schemas import ReviewAnswer
 from app.services.srs_service import calculate_next_review
 from app.services.translation_service import translate_meaning_groups
 
-router = APIRouter(prefix="/review", tags=["review"])
+router = APIRouter(
+    prefix="/review",
+    tags=["review"],
+    dependencies=[Depends(require_role("student"))],
+)
 templates = create_templates(Path(__file__).resolve().parents[1] / "templates")
 
 

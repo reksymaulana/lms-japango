@@ -76,12 +76,22 @@ class AuthPageTests(IsolatedAsyncioTestCase):
         self.assertIn('href="/student/materials"', student_navigation)
         self.assertIn('href="/student/quizzes"', student_navigation)
         self.assertIn('href="/student/history"', student_navigation)
+        student_logo = student_navigation.split(
+            '<a class="flex min-w-0', 1
+        )[1].split(">", 1)[0]
+        self.assertIn('href="/student"', student_logo)
+        self.assertNotIn("Beranda", student_navigation)
         self.assertNotIn('href="/sensei/materials"', student_navigation)
 
         sensei_navigation = await render_navigation("sensei")
         self.assertIn("Pengelolaan", sensei_navigation)
         self.assertIn("Akun", sensei_navigation)
         self.assertNotIn("Login/Register", sensei_navigation)
+        sensei_logo = sensei_navigation.split(
+            '<a class="flex min-w-0', 1
+        )[1].split(">", 1)[0]
+        self.assertIn('href="/sensei"', sensei_logo)
+        self.assertNotIn("Beranda", sensei_navigation)
         self.assertIn('href="/sensei/materials"', sensei_navigation)
         self.assertIn('href="/sensei/quizzes"', sensei_navigation)
         self.assertIn('href="/sensei/students"', sensei_navigation)
@@ -139,17 +149,35 @@ class AuthPageTests(IsolatedAsyncioTestCase):
                     home = await client.get("/")
                     account_page = await client.get("/auth/signup")
 
-                    for response in (home, account_page):
-                        self.assertEqual(response.status_code, 200)
-                        navigation = (
-                            response.text.split(
-                                '<div id="primary-navigation"', 1
-                            )[1].split("</div>", 1)[0]
-                        )
-                        self.assertIn(f'href="{dashboard_path}"', navigation)
-                        self.assertNotIn(f'href="{other_path}"', navigation)
-                        self.assertIn(
-                            "Siswa" if role == "student" else "Sensei",
-                            navigation,
-                        )
+                    self.assertEqual(home.status_code, 303)
+                    self.assertEqual(home.headers["location"], dashboard_path)
+                    self.assertEqual(account_page.status_code, 200)
+                    navigation = (
+                        account_page.text.split(
+                            '<div id="primary-navigation"', 1
+                        )[1].split("</div>", 1)[0]
+                    )
+                    self.assertIn(f'href="{dashboard_path}"', navigation)
+                    self.assertNotIn(f'href="{other_path}"', navigation)
+                    self.assertIn(
+                        "Siswa" if role == "student" else "Sensei",
+                        navigation,
+                    )
+
+                async def anonymous_account(request: Request) -> None:
+                    request.state.account = None
+                    return None
+
+                app.dependency_overrides[get_optional_current_account] = (
+                    anonymous_account
+                )
+                guest_home = await client.get("/")
+                self.assertEqual(guest_home.status_code, 200)
+                guest_navigation = (
+                    guest_home.text.split(
+                        '<div id="primary-navigation"', 1
+                    )[1].split("</div>", 1)[0]
+                )
+                self.assertIn('href="/"', guest_navigation)
+                self.assertIn('href="/auth/signup"', guest_navigation)
 

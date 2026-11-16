@@ -133,9 +133,14 @@ async def role_dashboard(
 @app.get(
     "/",
     response_class=HTMLResponse,
-    dependencies=[Depends(get_optional_current_account)],
 )
-async def dashboard(request: Request) -> HTMLResponse:
+async def dashboard(
+    request: Request,
+    current_user: AppUser | None = Depends(get_optional_current_account),
+) -> Response:
+    if current_user is not None:
+        destination = "/sensei" if current_user.role == "sensei" else "/student"
+        return RedirectResponse(url=destination, status_code=303)
     async with SessionLocal() as session:
         kanji_counts = dict(
             (await session.execute(select(Kanji.level, func.count()).group_by(Kanji.level))).all()
