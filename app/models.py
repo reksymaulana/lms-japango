@@ -8,6 +8,9 @@ class Base(DeclarativeBase):
     pass
 
 
+DEMO_LEARNER_ID = "demo"
+
+
 class Kanji(Base):
     __tablename__ = "kanji"
 
@@ -66,7 +69,7 @@ class UserItemProgress(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    learner_id: Mapped[str] = mapped_column(String(100), default="demo", index=True)
+    learner_id: Mapped[str] = mapped_column(String(100), default=DEMO_LEARNER_ID, index=True)
     item_type: Mapped[str] = mapped_column(String(20))
     item_id: Mapped[str] = mapped_column(String(255))
     repetitions: Mapped[int] = mapped_column(Integer, default=0)

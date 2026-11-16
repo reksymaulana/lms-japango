@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from app.config import settings
 from app.database import SessionLocal, engine
 from app.i18n import create_templates
-from app.models import Base, Kanji, UserItemProgress, Vocabulary
+from app.models import Base, DEMO_LEARNER_ID, Kanji, UserItemProgress, Vocabulary
 from app.routers import learning, review
 from app.services.grammar_seed import seed_grammar
 
@@ -81,7 +81,7 @@ async def dashboard(request: Request) -> HTMLResponse:
         vocabulary_count = await session.scalar(select(func.count()).select_from(Vocabulary)) or 0
         reviewed_count = await session.scalar(
             select(func.count()).select_from(UserItemProgress).where(
-                UserItemProgress.learner_id == "demo",
+                UserItemProgress.learner_id == DEMO_LEARNER_ID,
                 UserItemProgress.last_reviewed_at.is_not(None),
             )
         ) or 0

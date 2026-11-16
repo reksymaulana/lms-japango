@@ -21,7 +21,6 @@ class VocabularyData(BaseModel):
 
 
 class ReviewAnswer(BaseModel):
-    learner_id: str = Field(default="demo", min_length=1, max_length=100)
     item_type: Literal["kanji", "vocabulary"]
     item_id: str = Field(min_length=1, max_length=255)
     quality: int = Field(ge=0, le=5)

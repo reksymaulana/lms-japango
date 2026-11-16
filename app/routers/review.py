@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
 from app.i18n import TRANSLATIONS, create_templates, get_language
-from app.models import Kanji, UserItemProgress, Vocabulary
+from app.models import DEMO_LEARNER_ID, Kanji, UserItemProgress, Vocabulary
 from app.schemas import ReviewAnswer
 from app.services.srs_service import calculate_next_review
 from app.services.translation_service import translate_meaning_groups
@@ -82,12 +82,11 @@ async def _next_card(
 @router.get("", response_class=HTMLResponse)
 async def review_page(
     request: Request,
-    learner_id: str = "demo",
     session: AsyncSession = Depends(get_session),
 ) -> HTMLResponse:
     card, translation_unavailable = await _next_card(
         session,
-        learner_id,
+        DEMO_LEARNER_ID,
         get_language(request),
     )
     return templates.TemplateResponse(
@@ -95,7 +94,6 @@ async def review_page(
         name="review.html",
         context={
             "card": card,
-            "learner_id": learner_id,
             "translation_unavailable": translation_unavailable,
         },
     )
@@ -104,21 +102,19 @@ async def review_page(
 @router.post("/answer", response_class=HTMLResponse)
 async def submit_answer(
     request: Request,
-    learner_id: str = Form(default="demo", min_length=1, max_length=100),
     item_type: str = Form(),
     item_id: str = Form(min_length=1, max_length=255),
     quality: int = Form(ge=0, le=5),
     session: AsyncSession = Depends(get_session),
 ) -> HTMLResponse:
     answer = ReviewAnswer(
-        learner_id=learner_id,
         item_type=item_type,
         item_id=item_id,
         quality=quality,
     )
     progress = await session.scalar(
         select(UserItemProgress).where(
-            UserItemProgress.learner_id == answer.learner_id,
+            UserItemProgress.learner_id == DEMO_LEARNER_ID,
             UserItemProgress.item_type == answer.item_type,
             UserItemProgress.item_id == answer.item_id,
         )
@@ -132,7 +128,7 @@ async def submit_answer(
         if item_exists is None:
             raise HTTPException(status_code=404, detail="Kartu tidak ditemukan")
         progress = UserItemProgress(
-            learner_id=answer.learner_id,
+            learner_id=DEMO_LEARNER_ID,
             item_type=answer.item_type,
             item_id=answer.item_id,
             repetitions=0,
@@ -152,7 +148,7 @@ async def submit_answer(
 
     card, translation_unavailable = await _next_card(
         session,
-        answer.learner_id,
+        DEMO_LEARNER_ID,
         get_language(request),
     )
     return templates.TemplateResponse(
@@ -160,7 +156,6 @@ async def submit_answer(
         name="partials/flashcard.html",
         context={
             "card": card,
-            "learner_id": answer.learner_id,
             "answered": True,
             "translation_unavailable": translation_unavailable,
         },
