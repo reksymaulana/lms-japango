@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ t.auth_title }} · Japango{% endblock %}
+{% block content %}
+<section
+  id="auth-root"
+  class="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9"
+  data-auth-base-url="{{ auth_base_url }}"
+  data-missing-config="{{ t.auth_missing_config }}"
+  data-generic-error="{{ t.auth_generic_error }}"
+  data-session-error="{{ t.auth_session_error }}"
+  data-signing-up="{{ t.auth_signing_up }}"
+  data-signing-in="{{ t.auth_signing_in }}"
+  data-signup-success="{{ t.auth_signup_success }}"
+  data-verification-pending="{{ t.auth_verification_pending }}"
+  data-signed-in="{{ t.auth_signed_in }}"
+  data-signed-out="{{ t.auth_signed_out }}"
+>
+  <div class="mx-auto max-w-md">
+    <p class="text-sm font-semibold text-indigo-600">Japango</p>
+    <h1 class="mt-2 text-2xl font-bold tracking-tight">{{ t.auth_title }}</h1>
+    <p class="mt-2 text-sm leading-6 text-slate-500">{{ t.auth_description }}</p>
+
+    <p id="auth-status" class="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700" role="status" aria-live="polite" hidden></p>
+    {% if not auth_base_url %}
+    <p class="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="alert">
+      {{ t.auth_missing_config }}
+    </p>
+    {% endif %}
+
+    <div id="auth-forms" class="mt-6" {% if not auth_base_url %}hidden{% endif %}>
+      <div class="mb-5 flex gap-2" role="group" aria-label="{{ t.auth_title }}">
+        <button id="show-signup" type="button" aria-pressed="true" class="rounded-lg bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">
+          {{ t.auth_signup }}
+        </button>
+        <button id="show-signin" type="button" aria-pressed="false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">
+          {{ t.auth_signin }}
+        </button>
+      </div>
+
+      <form id="signup-form" class="space-y-4">
+        <label class="block text-sm font-medium text-slate-700">
+          {{ t.auth_name }}
+          <input name="name" type="text" autocomplete="name" required maxlength="100"
+                 class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
+        </label>
+        <label class="block text-sm font-medium text-slate-700">
+          {{ t.auth_email }}
+          <input name="email" type="email" autocomplete="email" required
+                 class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
+        </label>
+        <label class="block text-sm font-medium text-slate-700">
+          {{ t.auth_password }}
+          <input name="password" type="password" autocomplete="new-password" minlength="8" required
+                 class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
+        </label>
+        <button type="submit" class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-60">
+          {{ t.auth_create_account }}
+        </button>
+      </form>
+
+      <form id="signin-form" class="space-y-4" hidden>
+        <label class="block text-sm font-medium text-slate-700">
+          {{ t.auth_email }}
+          <input name="email" type="email" autocomplete="email" required
+                 class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
+        </label>
+        <label class="block text-sm font-medium text-slate-700">
+          {{ t.auth_password }}
+          <input name="password" type="password" autocomplete="current-password" required
+                 class="mt-1.5 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
+        </label>
+        <button type="submit" class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-wait disabled:opacity-60">
+          {{ t.auth_signin_button }}
+        </button>
+      </form>
+    </div>
+
+    <div id="auth-session" class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5" hidden>
+      <p class="text-sm font-semibold text-emerald-800">
+        {{ t.auth_signed_in }} <span id="auth-user-email" class="break-all"></span>
+      </p>
+      <button id="signout-button" type="button" class="mt-4 rounded-lg border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">
+        {{ t.auth_signout }}
+      </button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/auth.bundle.js" defer></script>
+{% endblock %}

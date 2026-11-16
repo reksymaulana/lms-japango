@@ -1,4 +1,8 @@
 .env
+.env.local
 .venv/
 __pycache__/
 *.py[cod]
+.neon
+node_modules/
+app/static/auth.bundle.js

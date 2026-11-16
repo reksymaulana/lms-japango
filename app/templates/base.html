@@ -98,7 +98,8 @@
           ("/learning/kanji", t.nav_kanji, current_path == "/learning/kanji"),
           ("/learning/vocabulary", t.nav_vocabulary, current_path == "/learning/vocabulary"),
           ("/learning/grammar", t.nav_grammar, current_path == "/learning/grammar"),
-          ("/review", t.nav_review, current_path.startswith("/review"))
+          ("/review", t.nav_review, current_path.startswith("/review")),
+          ("/auth/signup", t.nav_account, current_path.startswith("/auth"))
         ] %}
         <a href="{{ href }}" {% if active %}aria-current="page"{% endif %}
            class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition {% if active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">

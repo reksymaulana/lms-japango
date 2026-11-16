@@ -5,6 +5,7 @@ from typing import Literal
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 
 from app.config import settings
@@ -28,8 +29,22 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+app.mount(
+    "/static",
+    StaticFiles(directory=Path(__file__).parent / "static"),
+    name="static",
+)
 app.include_router(learning.router)
 app.include_router(review.router)
+
+
+@app.get("/auth/signup", response_class=HTMLResponse)
+async def auth_signup(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request=request,
+        name="auth.html",
+        context={"auth_base_url": settings.neon_auth_base_url},
+    )
 
 
 @app.post("/language")
