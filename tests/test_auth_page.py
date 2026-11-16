@@ -40,6 +40,33 @@ class AuthPageTests(IsolatedAsyncioTestCase):
         self.assertNotIn("Akun", navigation)
         self.assertNotIn('href="/learning/kanji"', navigation)
 
+    async def test_auth_refresh_hides_forms_while_restoring_existing_session(self) -> None:
+        from starlette.requests import Request
+
+        async def anonymous_account(request: Request):
+            request.state.account = None
+            return None
+
+        app.dependency_overrides[get_optional_current_account] = anonymous_account
+        self.addCleanup(
+            app.dependency_overrides.pop,
+            get_optional_current_account,
+            None,
+        )
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://testserver",
+        ) as client:
+            response = await client.get(
+                "/auth/signup?next=%2Faccount&refresh=1"
+            )
+
+        self.assertEqual(response.status_code, 200)
+        forms = response.text.split('<div id="auth-forms"', 1)[1].split(">", 1)[0]
+        self.assertIn("hidden", forms)
+        self.assertIn("Memeriksa sesi akun", response.text)
+        self.assertNotIn('id="auth-session"', response.text)
+
     async def test_navigation_is_role_specific(self) -> None:
         from starlette.requests import Request
 

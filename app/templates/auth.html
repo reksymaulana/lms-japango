@@ -21,28 +21,21 @@
   data-resend-code="{{ t.auth_resend_code }}"
   data-resending-code="{{ t.auth_resending_code }}"
   data-back-to-auth="{{ t.auth_back_to_auth }}"
-  data-signed-in="{{ t.auth_signed_in }}"
-  data-signed-out="{{ t.auth_signed_out }}"
-  data-user-id-label="{{ t.auth_user_id }}"
-  data-role-student="{{ t.auth_role_student }}"
-  data-role-sensei="{{ t.auth_role_sensei }}"
-  data-dashboard-label="{{ t.auth_open_dashboard }}"
   data-return-to="{{ return_to }}"
-  data-refresh="{{ 'true' if request.query_params.get('refresh') == '1' else 'false' }}"
 >
   <div class="mx-auto max-w-md">
     <p class="text-sm font-semibold text-indigo-600">Japango</p>
     <h1 class="mt-2 text-2xl font-bold tracking-tight">{{ t.auth_title }}</h1>
     <p class="mt-2 text-sm leading-6 text-slate-500">{{ t.auth_description }}</p>
 
-    <p id="auth-status" class="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700" role="status" aria-live="polite" hidden></p>
+    <p id="auth-status" class="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700" role="status" aria-live="polite" {% if request.query_params.get('refresh') != '1' %}hidden{% endif %}>{% if request.query_params.get('refresh') == '1' %}{{ t.auth_checking_session }}{% endif %}</p>
     {% if not auth_base_url %}
     <p class="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="alert">
       {{ t.auth_missing_config }}
     </p>
     {% endif %}
 
-    <div id="auth-forms" class="mt-6" {% if not auth_base_url %}hidden{% endif %}>
+    <div id="auth-forms" class="mt-6" {% if not auth_base_url or request.query_params.get('refresh') == '1' %}hidden{% endif %}>
       <div class="mb-5 flex gap-2" role="group" aria-label="{{ t.auth_title }}">
         <button id="show-signup" type="button" aria-pressed="true" class="rounded-lg bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700">
           {{ t.auth_signup }}
@@ -91,24 +84,6 @@
           {{ t.auth_signin_button }}
         </button>
       </form>
-    </div>
-
-    <div id="auth-session" class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5" hidden>
-      <p class="text-sm font-semibold text-emerald-800">
-        {{ t.auth_signed_in }} <span id="auth-user-email" class="break-all"></span>
-      </p>
-      <p class="mt-2 text-sm text-emerald-800">
-        <span id="auth-user-role"></span>
-      </p>
-      <p class="mt-2 break-all text-xs text-emerald-700">
-        <span id="auth-user-id-label"></span>: <span id="auth-user-id"></span>
-      </p>
-      <a id="auth-dashboard-link" href="/dashboard" class="mt-4 inline-block text-sm font-semibold text-indigo-700 underline">
-        {{ t.auth_open_dashboard }}
-      </a>
-      <button id="signout-button" type="button" class="mt-4 rounded-lg border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">
-        {{ t.auth_signout }}
-      </button>
     </div>
 
     <section id="verification-panel" class="mt-6 rounded-2xl border border-indigo-200 bg-indigo-50 p-5" hidden>

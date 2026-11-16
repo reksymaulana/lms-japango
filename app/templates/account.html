@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% block title %}{{ t.nav_account }} · Japango{% endblock %}
 {% block content %}
-<section class="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9">
+<section id="account-root" data-auth-base-url="{{ auth_base_url }}" data-session-error="{{ t.auth_session_error }}" data-generic-error="{{ t.auth_generic_error }}" class="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9">
   <p class="text-sm font-semibold text-indigo-600">Japango</p>
   <h1 class="mt-2 text-2xl font-bold tracking-tight">{{ t.account_title }}</h1>
+  <p id="account-status" class="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert" hidden></p>
   <dl class="mt-6 space-y-4">
     {% if account.name %}
     <div>
@@ -24,9 +25,12 @@
   </dl>
   <div class="mt-8 flex flex-wrap gap-3">
     <a href="{{ dashboard_path }}" class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">{{ t.auth_open_dashboard }}</a>
-    <form method="post" action="/auth/logout">
+    <form id="account-logout-form" method="post" action="/auth/logout">
       <button type="submit" class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">{{ t.auth_signout }}</button>
     </form>
   </div>
 </section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/auth.bundle.js" defer></script>
 {% endblock %}
