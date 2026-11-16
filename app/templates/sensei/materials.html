@@ -58,6 +58,7 @@
           </p>
         </div>
         <div class="flex gap-2">
+          <a class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-semibold text-indigo-700" href="/sensei/materials/{{ material.id }}/preview">{{ t.preview }}</a>
           <a class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-indigo-700" href="/sensei/materials?edit_id={{ material.id }}">{{ t.edit }}</a>
           <form method="post" action="/sensei/materials/{{ material.id }}/delete" onsubmit="return confirm('{{ t.confirm_delete }}')">
             <button class="rounded-lg border border-rose-200 px-3 py-2 text-sm font-semibold text-rose-700" type="submit">{{ t.delete }}</button>

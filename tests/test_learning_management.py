@@ -245,6 +245,85 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status_code, 404)
 
+    async def test_sensei_can_preview_draft_material_without_saving_changes(self) -> None:
+        self.session.objects[(LearningMaterial, 3)] = LearningMaterial(
+            id=3,
+            created_by="sensei-1",
+            title="Draft particles",
+            summary="A draft summary.",
+            content="Draft content for Sensei.",
+            published=False,
+        )
+        await self.use_account(SENSEI)
+
+        response = await self.client.get("/sensei/materials/3/preview")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Draft particles", response.text)
+        self.assertIn("Draft content for Sensei.", response.text)
+        self.assertIn("Ini masih draf", response.text)
+        self.assertIn("/sensei/materials", response.text)
+        self.assertFalse(self.session.committed)
+        self.assertEqual(self.session.added, [])
+
+    async def test_sensei_can_preview_draft_quiz_without_answer_key_or_submit_form(self) -> None:
+        self.session.objects[(Quiz, 5)] = Quiz(
+            id=5, title="Draft quiz", published=False, created_by="sensei-1"
+        )
+        self.session.scalar_rows.append(
+            [
+                QuizQuestion(
+                    id=10,
+                    quiz_id=5,
+                    position=1,
+                    prompt="Choose one.",
+                    question_type="multiple_choice",
+                    options=["A", "B"],
+                    answer_key="SECRET-ANSWER",
+                    points=1,
+                ),
+                QuizQuestion(
+                    id=11,
+                    quiz_id=5,
+                    position=2,
+                    prompt="Write a sentence.",
+                    question_type="written",
+                    options=[],
+                    answer_key="SECRET-GUIDANCE",
+                    points=2,
+                ),
+            ]
+        )
+        await self.use_account(SENSEI)
+
+        response = await self.client.get("/sensei/quizzes/5/preview")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Choose one.", response.text)
+        self.assertIn("Write a sentence.", response.text)
+        self.assertIn(">A</span>", response.text)
+        self.assertIn("Ini masih draf", response.text)
+        self.assertIn("disabled", response.text)
+        self.assertNotIn("SECRET-ANSWER", response.text)
+        self.assertNotIn("SECRET-GUIDANCE", response.text)
+        self.assertNotIn('action="/student/quizzes/5/submit"', response.text)
+        self.assertNotIn('name="question_10"', response.text)
+        self.assertFalse(self.session.committed)
+        self.assertEqual(self.session.added, [])
+
+    async def test_student_cannot_access_sensei_previews(self) -> None:
+        await self.use_account(STUDENT)
+
+        for path in (
+            "/sensei/materials/3/preview",
+            "/sensei/quizzes/5/preview",
+        ):
+            with self.subTest(path=path):
+                response = await self.client.get(path)
+
+                self.assertEqual(response.status_code, 303)
+                self.assertEqual(response.headers["location"], "/dashboard")
+
     async def test_student_quiz_page_does_not_render_answer_key(self) -> None:
         self.session.objects[(Quiz, 5)] = Quiz(
             id=5, title="Basics", published=True, created_by="sensei-1"

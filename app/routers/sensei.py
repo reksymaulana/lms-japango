@@ -117,6 +117,31 @@ async def manage_materials(
     )
 
 
+@router.get("/materials/{material_id}/preview", response_class=HTMLResponse)
+async def preview_material(
+    request: Request,
+    material_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    material = await session.get(LearningMaterial, material_id)
+    if material is None:
+        raise HTTPException(status_code=404, detail="Material not found")
+    category = (
+        await session.get(LearningCategory, material.category_id)
+        if material.category_id is not None
+        else None
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="student/material_detail.html",
+        context={
+            "material": material,
+            "category": category,
+            "preview_mode": True,
+        },
+    )
+
+
 @router.post("/materials")
 async def create_material(
     title: str = Form(),
@@ -371,6 +396,41 @@ async def manage_quizzes(
             "quizzes": quizzes.all(),
             "categories": categories.all(),
             "message": request.query_params.get("message"),
+        },
+    )
+
+
+@router.get("/quizzes/{quiz_id}/preview", response_class=HTMLResponse)
+async def preview_quiz(
+    request: Request,
+    quiz_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> HTMLResponse:
+    quiz = await session.get(Quiz, quiz_id)
+    if quiz is None:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    questions = await session.scalars(
+        select(QuizQuestion)
+        .where(QuizQuestion.quiz_id == quiz_id)
+        .order_by(QuizQuestion.position)
+    )
+    preview_questions = [
+        {
+            "id": question.id,
+            "prompt": question.prompt,
+            "question_type": question.question_type,
+            "options": question.options,
+            "points": question.points,
+        }
+        for question in questions.all()
+    ]
+    return templates.TemplateResponse(
+        request=request,
+        name="student/quiz_take.html",
+        context={
+            "quiz": quiz,
+            "questions": preview_questions,
+            "preview_mode": True,
         },
     )
 

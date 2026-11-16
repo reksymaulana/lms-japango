@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% block title %}{{ material.title }} · Japango{% endblock %}
 {% block content %}
+{% if preview_mode %}
+<a href="/sensei/materials" class="text-sm font-semibold text-indigo-700">← {{ t.back_to_materials }}</a>
+<div class="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900" role="status">
+  <p class="font-semibold">{{ t.preview_read_only }}</p>
+  {% if not material.published %}<p class="mt-1">{{ t.draft_preview_notice }}</p>{% endif %}
+</div>
+{% else %}
 <a href="/student/materials" class="text-sm font-semibold text-indigo-700">← {{ t.back_to_materials }}</a>
+{% endif %}
 <article class="mt-5 rounded-3xl border border-slate-200 bg-white p-6 sm:p-10">
   {% if category %}<p class="text-sm font-semibold text-indigo-600">{{ category.name }}</p>{% endif %}
   <h1 class="mt-2 text-3xl font-bold">{{ material.title }}</h1>

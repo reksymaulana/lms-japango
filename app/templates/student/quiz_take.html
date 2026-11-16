@@ -1,11 +1,23 @@
 {% extends "base.html" %}
 {% block title %}{{ quiz.title }} · Japango{% endblock %}
 {% block content %}
+{% if preview_mode %}
+<a href="/sensei/quizzes/{{ quiz.id }}" class="text-sm font-semibold text-indigo-700">← {{ t.back_to_quizzes }}</a>
+<div class="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900" role="status">
+  <p class="font-semibold">{{ t.preview_read_only }}</p>
+  {% if not quiz.published %}<p class="mt-1">{{ t.draft_preview_notice }}</p>{% endif %}
+</div>
+{% else %}
 <a href="/student/quizzes" class="text-sm font-semibold text-indigo-700">← {{ t.back_to_quizzes }}</a>
+{% endif %}
 <section class="mt-4 rounded-3xl border border-slate-200 bg-white p-6 sm:p-9">
   <h1 class="text-3xl font-bold">{{ quiz.title }}</h1>
   {% if quiz.description %}<p class="mt-2 text-slate-500">{{ quiz.description }}</p>{% endif %}
+  {% if preview_mode %}
+  <div class="mt-7 space-y-6">
+  {% else %}
   <form method="post" action="/student/quizzes/{{ quiz.id }}/submit" class="mt-7 space-y-6">
+  {% endif %}
     {% for question in questions %}
     <fieldset class="rounded-2xl border border-slate-200 p-5">
       <legend class="px-2 text-sm font-semibold text-indigo-700">{{ t.question_number }} {{ loop.index }} · {{ question.points }} {{ t.points }}</legend>
@@ -13,18 +25,35 @@
       {% if question.question_type == "multiple_choice" %}
       <div class="mt-4 grid gap-2">
         {% for option in question.options %}
+        {% if preview_mode %}
+        <div class="flex items-start gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+          <span class="mt-0.5 h-4 w-4 rounded-full border border-slate-300" aria-hidden="true"></span>
+          <span>{{ option }}</span>
+        </div>
+        {% else %}
         <label class="flex items-start gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm hover:bg-slate-50">
           <input type="radio" name="question_{{ question.id }}" value="{{ option }}" required class="mt-0.5 h-4 w-4 border-slate-300 text-indigo-600">
           <span>{{ option }}</span>
         </label>
+        {% endif %}
         {% endfor %}
       </div>
       {% else %}
+      {% if preview_mode %}
+      <textarea disabled rows="3" aria-label="{{ t.written_answer }}" placeholder="{{ t.preview_answer_placeholder }}" class="mt-4 block w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5"></textarea>
+      {% else %}
       <textarea name="question_{{ question.id }}" maxlength="5000" rows="3" required aria-label="{{ t.written_answer }}" class="mt-4 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5"></textarea>
+      {% endif %}
       {% endif %}
     </fieldset>
     {% endfor %}
+    {% if not preview_mode %}
     <button type="submit" class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">{{ t.submit_quiz }}</button>
+    {% endif %}
+  {% if preview_mode %}
+  </div>
+  {% else %}
   </form>
+  {% endif %}
 </section>
 {% endblock %}
