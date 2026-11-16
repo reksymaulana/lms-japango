@@ -1,0 +1,63 @@
+<div id="grammar-results">
+{% if grammar_list %}
+<section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <p class="text-sm text-slate-500">
+      {% if q %}{{ total }} pola cocok{% else %}Menampilkan {{ first_item }}–{{ last_item }} dari {{ total }} pola{% endif %}
+    </p>
+    <span class="text-xs font-medium text-slate-400">25 item per halaman</span>
+  </div>
+  <div class="space-y-3">
+    {% for grammar in grammar_list %}
+    <article class="rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-amber-200">
+      <div>
+        <span class="rounded-md bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{{ level }}</span>
+        <h2 class="mt-2 text-lg font-bold tracking-tight">{{ grammar.title }}</h2>
+        <p class="mt-2 max-w-3xl leading-6 text-slate-600">{{ grammar.explanation }}</p>
+      </div>
+      {% if grammar.examples %}
+      <details class="mt-4 border-t border-slate-100 pt-3">
+        <summary class="flex cursor-pointer items-center justify-between text-sm font-semibold text-amber-700">
+          Lihat contoh kalimat <span class="text-slate-400">＋</span>
+        </summary>
+        <div class="mt-3 space-y-3">
+          {% for example in grammar.examples %}
+          <div class="rounded-xl bg-amber-50/70 px-4 py-3">
+            <p class="font-medium text-slate-900">{{ example.japanese }}</p>
+            <p class="mt-1 text-sm text-slate-600">{{ example.translation }}</p>
+            <button type="button" data-text="{{ example.japanese }}" onclick="speakJapanese(this.dataset.text)" class="mt-2 text-xs font-semibold text-amber-800 hover:text-amber-950">▶ Dengarkan contoh</button>
+          </div>
+          {% endfor %}
+        </div>
+      </details>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% if pages > 1 %}
+  <nav class="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-4" aria-label="Halaman daftar tata bahasa">
+    {% if page > 1 %}
+    <a href="?level={{ level }}&q={{ q|urlencode }}&page={{ page - 1 }}" hx-get="/learning/grammar?level={{ level }}&q={{ q|urlencode }}&page={{ page - 1 }}" hx-target="#grammar-results" hx-swap="outerHTML" hx-push-url="true"
+       class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">← Sebelumnya</a>
+    {% else %}<span></span>{% endif %}
+    <span class="text-sm font-semibold text-slate-600">Halaman {{ page }} / {{ pages }}</span>
+    {% if page < pages %}
+    <a href="?level={{ level }}&q={{ q|urlencode }}&page={{ page + 1 }}" hx-get="/learning/grammar?level={{ level }}&q={{ q|urlencode }}&page={{ page + 1 }}" hx-target="#grammar-results" hx-swap="outerHTML" hx-push-url="true"
+       class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Selanjutnya →</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% elif q %}
+<div class="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center">
+  <p class="font-semibold text-slate-800">Pola tata bahasa {{ level }} tidak ditemukan</p>
+  <p class="mt-1 text-sm text-slate-500">Coba kata kunci atau contoh kalimat yang berbeda.</p>
+</div>
+{% else %}
+<div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+  <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 text-2xl text-amber-700">文</span>
+  <h2 class="mt-4 text-lg font-bold">Materi {{ level }} belum tersedia</h2>
+  <p class="mt-2 text-sm text-slate-500">Pilih level lain atau kembali lagi nanti.</p>
+</div>
+{% endif %}
+</div>

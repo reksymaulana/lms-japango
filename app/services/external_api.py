@@ -34,9 +34,12 @@ async def fetch_kanji_detail(character: str, level: str) -> KanjiData:
     )
 
 
-async def search_jisho(query: str) -> list[VocabularyData]:
+async def search_jisho(query: str, page: int = 1) -> list[VocabularyData]:
     async with httpx.AsyncClient(timeout=settings.http_timeout_seconds) as client:
-        response = await client.get(settings.jisho_api_url, params={"keyword": query})
+        response = await client.get(
+            settings.jisho_api_url,
+            params={"keyword": query, "page": page},
+        )
         response.raise_for_status()
         payload = response.json()
 
