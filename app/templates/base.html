@@ -81,8 +81,8 @@
 <body class="min-h-screen text-slate-900 antialiased">
   {% set current_path = request.url.path %}
   <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
-    <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6" aria-label="{{ t.main_navigation }}">
-      <a class="flex shrink-0 items-center gap-2.5 rounded-xl font-bold tracking-tight text-slate-900" href="/" aria-label="Japango, {{ t.nav_home }}">
+    <nav class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-6 lg:flex-nowrap lg:gap-4" aria-label="{{ t.main_navigation }}">
+      <a class="flex min-w-0 shrink-0 items-center gap-2.5 rounded-xl font-bold tracking-tight text-slate-900" href="/" aria-label="Japango, {{ t.nav_home }}">
         <span class="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 shadow-sm" aria-hidden="true">
           <svg viewBox="0 0 40 40" class="h-8 w-8" fill="none">
             <path d="M10 7.5h20a3.5 3.5 0 0 1 3.5 3.5v13a3.5 3.5 0 0 1-3.5 3.5h-8l-6 5v-5h-6a3.5 3.5 0 0 1-3.5-3.5V11A3.5 3.5 0 0 1 10 7.5Z" fill="white" fill-opacity=".12" stroke="white" stroke-opacity=".8" stroke-width="1.5"/>
@@ -92,7 +92,7 @@
         </span>
         <span><span class="text-lg">Japango</span><span class="ml-2 hidden text-xs font-medium text-slate-400 sm:inline"> · {{ t.tagline }}</span></span>
       </a>
-      <div class="flex items-center gap-1 overflow-x-auto">
+      <div class="order-3 -mx-4 flex w-full min-w-0 items-center gap-1 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:order-none lg:mx-0 lg:w-auto lg:flex-1 lg:justify-center lg:overflow-visible lg:px-0 lg:pb-0">
         {% for href, label, active in [
           ("/", t.nav_home, current_path == "/"),
           ("/learning/kanji", t.nav_kanji, current_path == "/learning/kanji"),
@@ -107,22 +107,24 @@
         </a>
         {% endfor %}
       </div>
-      <form method="post" action="/language" class="shrink-0">
-        <input type="hidden" name="return_to" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
-        <label class="sr-only" for="language-select">{{ t.language }}</label>
-        <select id="language-select" name="lang" title="{{ t.language }}" onchange="this.form.requestSubmit()"
-                class="h-10 rounded-xl border border-slate-200 bg-white px-2 text-xs font-bold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
-          <option value="id" {% if lang == "id" %}selected{% endif %}>ID</option>
-          <option value="en" {% if lang == "en" %}selected{% endif %}>EN</option>
-        </select>
-      </form>
-      <button id="theme-toggle" type="button" aria-label="{{ t.enable_dark_theme }}" data-dark-label="{{ t.enable_dark_theme }}" data-light-label="{{ t.enable_light_theme }}" title="{{ t.toggle_theme }}"
-              class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-lg text-slate-700 transition hover:bg-slate-50">
-        <span aria-hidden="true">☾</span>
-      </button>
+      <div class="order-2 ml-auto flex shrink-0 items-center gap-2 lg:order-none lg:ml-0">
+        <form method="post" action="/language">
+          <input type="hidden" name="return_to" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
+          <label class="sr-only" for="language-select">{{ t.language }}</label>
+          <select id="language-select" name="lang" title="{{ t.language }}" onchange="this.form.requestSubmit()"
+                  class="h-10 rounded-xl border border-slate-200 bg-white px-2 text-xs font-bold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100">
+            <option value="id" {% if lang == "id" %}selected{% endif %}>ID</option>
+            <option value="en" {% if lang == "en" %}selected{% endif %}>EN</option>
+          </select>
+        </form>
+        <button id="theme-toggle" type="button" aria-label="{{ t.enable_dark_theme }}" data-dark-label="{{ t.enable_dark_theme }}" data-light-label="{{ t.enable_light_theme }}" title="{{ t.toggle_theme }}"
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-lg text-slate-700 transition hover:bg-slate-50">
+          <span aria-hidden="true">☾</span>
+        </button>
+      </div>
     </nav>
   </header>
-  <main class="mx-auto min-h-[calc(100vh-140px)] max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
+  <main class="mx-auto min-h-[calc(100vh-140px)] max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
     {% block content %}{% endblock %}
   </main>
   <footer class="border-t border-slate-200 bg-white">
