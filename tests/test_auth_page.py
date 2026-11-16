@@ -23,6 +23,11 @@ class AuthPageTests(IsolatedAsyncioTestCase):
         self.assertIn("Create your Japango account", response.text)
         self.assertIn('aria-controls="primary-navigation"', response.text)
         self.assertIn('aria-label="Open navigation menu"', response.text)
+        self.assertIn('id="verification-panel"', response.text)
+        self.assertIn('id="open-verification"', response.text)
+        self.assertIn('name="email"', response.text)
+        self.assertIn('name="otp"', response.text)
+        self.assertIn("Verification code", response.text)
         navigation = (
             response.text.split('<div id="primary-navigation"', 1)[1]
             .split("</div>", 1)[0]

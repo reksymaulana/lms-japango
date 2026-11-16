@@ -8,6 +8,13 @@ if (root) {
   const signupForm = document.getElementById("signup-form");
   const signinForm = document.getElementById("signin-form");
   const sessionPanel = document.getElementById("auth-session");
+  const verificationPanel = document.getElementById("verification-panel");
+  const verificationForm = document.getElementById("verification-form");
+  const verificationEmail = verificationForm.querySelector('input[name="email"]');
+  const verificationCode = verificationForm.querySelector('input[name="otp"]');
+  const resendVerificationButton = document.getElementById("resend-verification");
+  const backToAuthButton = document.getElementById("back-to-auth");
+  const openVerificationButton = document.getElementById("open-verification");
   const userEmail = document.getElementById("auth-user-email");
   const userRole = document.getElementById("auth-user-role");
   const userIdLabel = document.getElementById("auth-user-id-label");
@@ -16,7 +23,6 @@ if (root) {
   const signoutButton = document.getElementById("signout-button");
   const signupTab = document.getElementById("show-signup");
   const signinTab = document.getElementById("show-signin");
-
   function showStatus(message, isError = false) {
     status.textContent = message;
     status.hidden = !message;
@@ -29,6 +35,16 @@ if (root) {
   function showForms() {
     forms.hidden = false;
     sessionPanel.hidden = true;
+    verificationPanel.hidden = true;
+  }
+
+  function showVerification(email) {
+    forms.hidden = true;
+    sessionPanel.hidden = true;
+    verificationPanel.hidden = false;
+    verificationEmail.value = email;
+    verificationCode.value = "";
+    (email ? verificationCode : verificationEmail).focus();
   }
 
   function showSession(user, appSession) {
@@ -123,11 +139,15 @@ if (root) {
           return;
         }
 
+        if (operation === "signUp" && result.data?.user?.emailVerified === false) {
+          showVerification(values.email);
+          showStatus(root.dataset.verificationPending);
+          return;
+        }
+
         const appSession = await readCurrentUser();
         if (appSession) {
           redirectAfterLogin(appSession);
-        } else if (operation === "signUp") {
-          showStatus(root.dataset.verificationPending);
         } else {
           showStatus(root.dataset.sessionError, true);
         }
@@ -148,6 +168,74 @@ if (root) {
     signinForm.addEventListener("submit", (event) => {
       event.preventDefault();
       void submitCredentials(signinForm, "signIn");
+    });
+    verificationForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = verificationForm.querySelector('button[type="submit"]');
+      const label = button.textContent;
+      button.disabled = true;
+      button.textContent = root.dataset.verifying;
+      showStatus("");
+
+      try {
+        const result = await auth.emailOtp.verifyEmail({
+          email: verificationEmail.value.trim(),
+          otp: verificationCode.value.trim(),
+        });
+        if (result.error) {
+          showStatus(result.error.message || root.dataset.genericError, true);
+          return;
+        }
+
+        if (result.data?.session) {
+          const appSession = await readCurrentUser();
+          if (appSession) {
+            redirectAfterLogin(appSession);
+          }
+          return;
+        }
+
+        showForms();
+        showMode("signin");
+        showStatus(root.dataset.verificationSuccess);
+      } catch (error) {
+        showStatus(error?.message || root.dataset.genericError, true);
+      } finally {
+        button.disabled = false;
+        button.textContent = label;
+      }
+    });
+    resendVerificationButton.addEventListener("click", async () => {
+      resendVerificationButton.disabled = true;
+      const label = resendVerificationButton.textContent;
+      resendVerificationButton.textContent = root.dataset.resendingCode;
+      showStatus("");
+
+      try {
+        const { error } = await auth.sendVerificationEmail({
+          email: verificationEmail.value.trim(),
+          callbackURL: window.location.origin,
+        });
+        if (error) {
+          showStatus(error.message || root.dataset.genericError, true);
+          return;
+        }
+        showStatus(root.dataset.verificationPending);
+      } catch (error) {
+        showStatus(error?.message || root.dataset.genericError, true);
+      } finally {
+        resendVerificationButton.disabled = false;
+        resendVerificationButton.textContent = label;
+      }
+    });
+    backToAuthButton.addEventListener("click", () => {
+      showForms();
+      showMode("signup");
+      showStatus("");
+    });
+    openVerificationButton.addEventListener("click", () => {
+      showVerification(signupForm.elements.email.value.trim());
+      showStatus("");
     });
     signoutButton.addEventListener("click", async () => {
       signoutButton.disabled = true;
