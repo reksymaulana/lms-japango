@@ -121,6 +121,17 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
         grammar = next(item for item in self.session.added if isinstance(item, Bunpou))
         self.assertEqual(grammar.examples[0]["translation"], "Saya seorang siswa.")
 
+    async def test_sensei_dashboard_renders_management_counts(self) -> None:
+        self.session.scalar_rows.extend([4, 3, 2, 1, 1])
+        await self.use_account(SENSEI)
+
+        response = await self.client.get("/sensei")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Kelola materi", response.text)
+        self.assertIn("Kelola soal", response.text)
+        self.assertIn("Jawaban menunggu penilaian", response.text)
+
     async def test_sensei_can_add_multiple_choice_question(self) -> None:
         self.session.objects[(Quiz, 5)] = Quiz(
             id=5, title="Basics", published=False, created_by="sensei-1"

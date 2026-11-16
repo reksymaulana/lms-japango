@@ -47,15 +47,6 @@ async def student_dashboard(
         .select_from(QuizAttempt)
         .where(QuizAttempt.student_id == account.auth_user_id)
     ) or 0
-    material_count = await session.scalar(
-        select(func.count()).select_from(LearningMaterial)
-    ) or 0
-    quiz_count = await session.scalar(select(func.count()).select_from(Quiz)) or 0
-    pending_grade_count = await session.scalar(
-        select(func.count())
-        .select_from(QuizAttempt)
-        .where(QuizAttempt.status == "needs_review")
-    ) or 0
     return templates.TemplateResponse(
         request=request,
         name="dashboard/student.html",
@@ -84,6 +75,15 @@ async def sensei_dashboard(
         .where(AppUser.role == "student", AppUser.is_active.is_(True))
     ) or 0
     grammar_count = await session.scalar(select(func.count()).select_from(Bunpou)) or 0
+    material_count = await session.scalar(
+        select(func.count()).select_from(LearningMaterial)
+    ) or 0
+    quiz_count = await session.scalar(select(func.count()).select_from(Quiz)) or 0
+    pending_grade_count = await session.scalar(
+        select(func.count())
+        .select_from(QuizAttempt)
+        .where(QuizAttempt.status == "needs_review")
+    ) or 0
     return templates.TemplateResponse(
         request=request,
         name="dashboard/sensei.html",
