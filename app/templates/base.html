@@ -94,21 +94,32 @@
         <span><span class="text-lg">Japango</span><span class="ml-2 hidden text-xs font-medium text-slate-400 sm:inline"> · {{ t.tagline }}</span></span>
       </a>
       <div id="primary-navigation" class="order-3 -mx-4 hidden w-full flex-col gap-1 border-t border-slate-100 px-4 pt-3 lg:order-none lg:mx-0 lg:flex lg:w-auto lg:flex-1 lg:flex-row lg:justify-center lg:gap-1 lg:border-t-0 lg:px-0 lg:pt-0">
-        {% set navigation_items = [
-          ("/", t.nav_home, current_path == "/")
-        ] %}
+        {% set navigation_items = [("/", t.nav_home, current_path == "/")] %}
         {% if current_user %}
           {% if current_user.role == "sensei" %}
-            {% set navigation_items = navigation_items + [("/sensei", t.nav_sensei_dashboard, current_path.startswith("/sensei"))] %}
+            {% set navigation_items = navigation_items + [
+              ("/sensei", t.nav_sensei_dashboard, current_path == "/sensei"),
+              ("/sensei/grammar", t.manage_grammar, current_path.startswith("/sensei/grammar")),
+              ("/sensei/materials", t.manage_materials, current_path.startswith("/sensei/materials")),
+              ("/sensei/categories", t.manage_categories, current_path.startswith("/sensei/categories")),
+              ("/sensei/quizzes", t.manage_quizzes, current_path.startswith("/sensei/quizzes")),
+              ("/sensei/students", t.student_progress, current_path.startswith("/sensei/students")),
+              ("/sensei/attempts", t.student_results, current_path.startswith("/sensei/attempts"))
+            ] %}
           {% else %}
-            {% set navigation_items = navigation_items + [("/student", t.nav_student_dashboard, current_path.startswith("/student"))] %}
+            {% set navigation_items = navigation_items + [
+              ("/student", t.nav_student_dashboard, current_path == "/student"),
+              ("/student/materials", t.learning_materials, current_path.startswith("/student/materials")),
+              ("/student/quizzes", t.available_quizzes, current_path.startswith("/student/quizzes")),
+              ("/student/history", t.quiz_history, current_path.startswith("/student/history")),
+              ("/learning/kanji", t.nav_kanji, current_path == "/learning/kanji"),
+              ("/learning/vocabulary", t.nav_vocabulary, current_path == "/learning/vocabulary"),
+              ("/learning/grammar", t.nav_grammar, current_path == "/learning/grammar"),
+              ("/review", t.nav_review, current_path.startswith("/review"))
+            ] %}
           {% endif %}
         {% endif %}
         {% set navigation_items = navigation_items + [
-          ("/learning/kanji", t.nav_kanji, current_path == "/learning/kanji"),
-          ("/learning/vocabulary", t.nav_vocabulary, current_path == "/learning/vocabulary"),
-          ("/learning/grammar", t.nav_grammar, current_path == "/learning/grammar"),
-          ("/review", t.nav_review, current_path.startswith("/review")),
           ("/auth/signup", t.nav_account, current_path.startswith("/auth"))
         ] %}
         {% for href, label, active in navigation_items %}
