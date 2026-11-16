@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ t.sensei_dashboard_title }} · Japango{% endblock %}
+{% block content %}
+<section class="rounded-3xl bg-gradient-to-br from-indigo-700 to-violet-800 px-6 py-8 text-white shadow-lg sm:px-10">
+  <p class="text-sm font-semibold text-indigo-100">{{ t.sensei_dashboard_title }}</p>
+  <h1 class="mt-2 text-3xl font-bold">{{ t.welcome }}, {{ account.name or account.email or t.auth_role_sensei }}</h1>
+  <p class="mt-3 text-indigo-100">{{ t.sensei_dashboard_description }}</p>
+</section>
+
+<section class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="{{ t.sensei_summary }}">
+  <article class="rounded-2xl border border-slate-200 bg-white p-5">
+    <p class="text-sm font-medium text-slate-500">{{ t.sensei_students }}</p>
+    <p class="mt-2 text-3xl font-bold">{{ student_count }}</p>
+  </article>
+  <article class="rounded-2xl border border-slate-200 bg-white p-5">
+    <p class="text-sm font-medium text-slate-500">{{ t.nav_grammar }}</p>
+    <p class="mt-2 text-3xl font-bold">{{ grammar_count }}</p>
+  </article>
+  <article class="rounded-2xl border border-slate-200 bg-white p-5">
+    <p class="text-sm font-medium text-slate-500">{{ t.manage_materials }}</p>
+    <p class="mt-2 text-3xl font-bold">{{ material_count }}</p>
+  </article>
+  <article class="rounded-2xl border border-slate-200 bg-white p-5">
+    <p class="text-sm font-medium text-slate-500">{{ t.manage_quizzes }}</p>
+    <p class="mt-2 text-3xl font-bold">{{ quiz_count }}</p>
+  </article>
+  <article class="rounded-2xl border border-slate-200 bg-white p-5">
+    <p class="text-sm font-medium text-slate-500">{{ t.pending_grades }}</p>
+    <p class="mt-2 text-3xl font-bold">{{ pending_grade_count }}</p>
+  </article>
+</section>
+
+<section class="mt-8 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+  <h2 class="text-xl font-bold">{{ t.sensei_management }}</h2>
+  <p class="mt-2 text-sm text-slate-500">{{ t.sensei_management_description }}</p>
+  <div class="mt-5 flex flex-wrap gap-3">
+    <a href="/sensei/grammar" class="rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:bg-indigo-700">
+      {{ t.manage_grammar }}
+    </a>
+    <a href="/sensei/materials" class="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-50">
+      {{ t.manage_materials }}
+    </a>
+    <a href="/sensei/quizzes" class="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-50">
+      {{ t.manage_quizzes }}
+    </a>
+    <a href="/sensei/students" class="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-50">
+      {{ t.student_progress }}
+    </a>
+    <a href="/sensei/attempts" class="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-50">
+      {{ t.student_results }}
+    </a>
+  </div>
+</section>
+{% endblock %}

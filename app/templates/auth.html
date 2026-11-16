@@ -14,6 +14,12 @@
   data-verification-pending="{{ t.auth_verification_pending }}"
   data-signed-in="{{ t.auth_signed_in }}"
   data-signed-out="{{ t.auth_signed_out }}"
+  data-user-id-label="{{ t.auth_user_id }}"
+  data-role-student="{{ t.auth_role_student }}"
+  data-role-sensei="{{ t.auth_role_sensei }}"
+  data-dashboard-label="{{ t.auth_open_dashboard }}"
+  data-return-to="{{ return_to }}"
+  data-refresh="{{ 'true' if request.query_params.get('refresh') == '1' else 'false' }}"
 >
   <div class="mx-auto max-w-md">
     <p class="text-sm font-semibold text-indigo-600">Japango</p>
@@ -79,6 +85,15 @@
       <p class="text-sm font-semibold text-emerald-800">
         {{ t.auth_signed_in }} <span id="auth-user-email" class="break-all"></span>
       </p>
+      <p class="mt-2 text-sm text-emerald-800">
+        <span id="auth-user-role"></span>
+      </p>
+      <p class="mt-2 break-all text-xs text-emerald-700">
+        <span id="auth-user-id-label"></span>: <span id="auth-user-id"></span>
+      </p>
+      <a id="auth-dashboard-link" href="/dashboard" class="mt-4 inline-block text-sm font-semibold text-indigo-700 underline">
+        {{ t.auth_open_dashboard }}
+      </a>
       <button id="signout-button" type="button" class="mt-4 rounded-lg border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">
         {{ t.auth_signout }}
       </button>
