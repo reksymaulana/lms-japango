@@ -113,6 +113,7 @@ async def account_page(
         context={
             "account": account,
             "dashboard_path": dashboard_path,
+            "auth_base_url": settings.neon_auth_base_url,
         },
     )
 

@@ -162,7 +162,13 @@ class AuthPageTests(IsolatedAsyncioTestCase):
             get_current_account,
             None,
         )
-        with patch("app.main.SessionLocal", side_effect=EmptySession):
+        with (
+            patch("app.main.SessionLocal", side_effect=EmptySession),
+            patch(
+                "app.main.settings.neon_auth_base_url",
+                "https://auth.example.test/app",
+            ),
+        ):
             async with httpx.AsyncClient(
                 transport=httpx.ASGITransport(app=app),
                 base_url="http://testserver",
@@ -190,6 +196,11 @@ class AuthPageTests(IsolatedAsyncioTestCase):
                     self.assertEqual(home.headers["location"], dashboard_path)
                     self.assertEqual(account_page.status_code, 200)
                     self.assertIn("Informasi akun", account_page.text)
+                    self.assertIn(
+                        'data-auth-base-url="https://auth.example.test/app"',
+                        account_page.text,
+                    )
+                    self.assertIn("/static/auth.bundle.js", account_page.text)
                     self.assertNotIn('id="signup-form"', account_page.text)
                     self.assertNotIn('id="signin-form"', account_page.text)
                     self.assertEqual(signup_page.status_code, 303)
