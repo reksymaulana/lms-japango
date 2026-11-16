@@ -48,3 +48,9 @@ Pendaftaran dan masuk email/kata sandi tersedia di `/auth/signup` melalui Neon M
 Gloss bahasa Inggris dari kanjiapi.dev dan Jisho diterjemahkan ke Bahasa Indonesia melalui MyMemory saat diperlukan dan hasilnya disimpan di tabel `translation_cache`. Karena layanan gratis membatasi pemakaian anonim (5.000 karakter per hari), pemuatan pertama dapat lebih lambat; jika layanan gagal atau kuotanya habis, gloss Inggris ditampilkan dengan pemberitahuan. URL dan timeout layanan dapat diubah melalui `TRANSLATION_API_URL` dan `TRANSLATION_TIMEOUT_SECONDS`.
 
 API kanjiapi.dev dan Jisho diakses langsung saat dibutuhkan. Jisho menyimpan hasil pencarian di PostgreSQL; data Kanji disimpan oleh skrip seed. Tailwind CDN cocok untuk prototipe, bukan konfigurasi build produksi.
+
+## Pemeriksaan keamanan
+
+Workflow GitHub Actions `.github/workflows/security.yml` berjalan pada push ke branch, pull request, dan mingguan. Workflow menjalankan CodeQL untuk Python dan JavaScript, Bandit untuk kode Python, `pip-audit` dan `npm audit` untuk dependensi, Gitleaks untuk riwayat Git, serta pemeriksaan perubahan dependensi pada pull request. `pip-audit` menggagalkan pemeriksaan untuk temuan apa pun; `npm audit` dan dependency review menggunakan ambang moderate; Bandit memeriksa temuan medium/high dengan confidence medium/high. CodeQL mengirimkan temuan sebagai alert code scanning di GitHub, bukan otomatis menggagalkan job. Pemindaian membantu menemukan risiko, tetapi tidak dapat menjamin bahwa aplikasi sepenuhnya aman.
+
+Agar kegagalan workflow mencegah merge, jadikan pemeriksaan keamanan sebagai required status checks di aturan branch/ruleset GitHub. Jika tersedia, aktifkan juga aturan code-scanning untuk memblokir merge berdasarkan alert CodeQL.
