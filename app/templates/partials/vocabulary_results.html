@@ -1,7 +1,7 @@
 {% if vocabulary_list %}
 <div class="mb-3 flex items-center justify-between">
-  <h2 class="font-semibold text-slate-800">Hasil pencarian</h2>
-  <span class="text-xs text-slate-500">Halaman {{ page }} · maksimal 10 hasil per halaman dari Jisho</span>
+  <h2 class="font-semibold text-slate-800">{{ t.search_results }}</h2>
+  <span class="text-xs text-slate-500">{{ t.page }} {{ page }} · 10 {{ t.jisho_page_info }}</span>
 </div>
 <div class="grid gap-3 sm:grid-cols-2">
   {% for item in vocabulary_list %}
@@ -11,33 +11,33 @@
         <h3 class="text-2xl font-bold tracking-wide text-slate-900">{{ item.word }}</h3>
         {% if item.reading %}<p class="mt-1 text-sm text-slate-500">{{ item.reading }}</p>{% endif %}
       </div>
-      {% if item.reading %}<button type="button" aria-label="Dengarkan {{ item.reading }}" data-text="{{ item.reading }}" onclick="speakJapanese(this.dataset.text)"
+      {% if item.reading %}<button type="button" aria-label="{{ t.listen }} {{ item.reading }}" data-text="{{ item.reading }}" onclick="speakJapanese(this.dataset.text)"
         class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sky-50 text-sky-700 transition hover:bg-sky-100">▶</button>{% endif %}
     </div>
     <div class="mt-4 border-t border-slate-100 pt-3">
-      <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Arti</p>
-      <p class="mt-1 leading-6 text-slate-700">{{ item.meanings|join(", ") or "Arti belum tersedia" }}</p>
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t.meaning }}</p>
+      <p class="mt-1 leading-6 text-slate-700">{{ item.meanings|join(", ") or t.not_available }}</p>
     </div>
   </article>
   {% endfor %}
 </div>
 {% if has_previous or has_next %}
-<nav class="mt-5 flex items-center justify-between gap-3" aria-label="Halaman hasil pencarian">
+<nav class="mt-5 flex items-center justify-between gap-3" aria-label="{{ t.search_results }}">
   {% if has_previous %}
-  <a href="/learning/vocabulary?q={{ q|urlencode }}&page={{ page - 1 }}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">← Sebelumnya</a>
+  <a href="/learning/vocabulary?q={{ q|urlencode }}&page={{ page - 1 }}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">{{ t.previous }}</a>
   {% else %}<span></span>{% endif %}
   {% if has_next %}
-  <a href="/learning/vocabulary?q={{ q|urlencode }}&page={{ page + 1 }}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Selanjutnya →</a>
+  <a href="/learning/vocabulary?q={{ q|urlencode }}&page={{ page + 1 }}" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">{{ t.next }}</a>
   {% endif %}
 </nav>
 {% endif %}
 {% elif saved_vocabulary_list is defined %}
 <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
   <div>
-    <h2 class="font-semibold text-slate-800">Kosakata tersimpan</h2>
-    <p class="text-sm text-slate-500">Kata yang pernah kamu cari tersedia di sini.</p>
+    <h2 class="font-semibold text-slate-800">{{ t.saved_list_title }}</h2>
+    <p class="text-sm text-slate-500">{{ t.saved_list_description }}</p>
   </div>
-  <span class="text-sm text-slate-500">{{ total }} kata</span>
+  <span class="text-sm text-slate-500">{{ total }} {{ t.words }}</span>
 </div>
 {% if saved_vocabulary_list %}
 <div class="grid gap-3 sm:grid-cols-2">
@@ -48,41 +48,41 @@
         <h3 class="text-2xl font-bold tracking-wide text-slate-900">{{ item.word }}</h3>
         {% if item.reading %}<p class="mt-1 text-sm text-slate-500">{{ item.reading }}</p>{% endif %}
       </div>
-      {% if item.reading %}<button type="button" aria-label="Dengarkan {{ item.reading }}" data-text="{{ item.reading }}" onclick="speakJapanese(this.dataset.text)"
+      {% if item.reading %}<button type="button" aria-label="{{ t.listen }} {{ item.reading }}" data-text="{{ item.reading }}" onclick="speakJapanese(this.dataset.text)"
         class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sky-50 text-sky-700 transition hover:bg-sky-100">▶</button>{% endif %}
     </div>
     <div class="mt-4 border-t border-slate-100 pt-3">
-      <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Arti</p>
-      <p class="mt-1 leading-6 text-slate-700">{{ item.meanings|join(", ") or "Arti belum tersedia" }}</p>
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t.meaning }}</p>
+      <p class="mt-1 leading-6 text-slate-700">{{ item.meanings|join(", ") or t.not_available }}</p>
     </div>
   </article>
   {% endfor %}
 </div>
 <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-  <p class="text-sm text-slate-500">Menampilkan {{ first_item }}–{{ last_item }} dari {{ total }} kata tersimpan</p>
-  <nav class="flex items-center gap-2" aria-label="Halaman kosakata tersimpan">
+  <p class="text-sm text-slate-500">{{ t.showing }} {{ first_item }}–{{ last_item }} {{ t.of }} {{ total }} {{ t.saved_showing }}</p>
+  <nav class="flex items-center gap-2" aria-label="{{ t.saved_list_title }}">
     {% if page > 1 %}
-    <a href="/learning/vocabulary?page={{ page - 1 }}" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">← Sebelumnya</a>
+    <a href="/learning/vocabulary?page={{ page - 1 }}" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">{{ t.previous }}</a>
     {% endif %}
-    <span class="px-2 text-sm font-semibold text-slate-600">Halaman {{ page }} / {{ pages }}</span>
+    <span class="px-2 text-sm font-semibold text-slate-600">{{ t.page }} {{ page }} / {{ pages }}</span>
     {% if page < pages %}
-    <a href="/learning/vocabulary?page={{ page + 1 }}" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Selanjutnya →</a>
+    <a href="/learning/vocabulary?page={{ page + 1 }}" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">{{ t.next }}</a>
     {% endif %}
   </nav>
 </div>
 {% else %}
 <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center text-sm text-slate-500">
-  Belum ada kosakata tersimpan. Cari kata di atas untuk mulai membangun daftar belajarmu.
+  {{ t.no_saved_words }}
 </div>
 {% endif %}
 {% elif request.query_params.get("q") %}
 <div class="rounded-2xl border border-slate-200 bg-white px-5 py-8 text-center">
   <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-xl text-slate-500">?</span>
-  <p class="mt-3 font-semibold text-slate-800">Belum menemukan kata itu</p>
-  <p class="mt-1 text-sm text-slate-500">Coba kata Jepang, romaji, atau arti bahasa Inggris yang berbeda.</p>
+  <p class="mt-3 font-semibold text-slate-800">{{ t.no_word_title }}</p>
+  <p class="mt-1 text-sm text-slate-500">{{ t.no_word_description }}</p>
 </div>
 {% else %}
 <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 px-5 py-8 text-center text-sm text-slate-500">
-  Hasil pencarian akan muncul di sini.
+  {{ t.search_empty }}
 </div>
 {% endif %}

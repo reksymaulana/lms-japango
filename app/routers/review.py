@@ -3,17 +3,17 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
+from app.i18n import create_templates
 from app.models import Kanji, UserItemProgress, Vocabulary
 from app.schemas import ReviewAnswer
 from app.services.srs_service import calculate_next_review
 
 router = APIRouter(prefix="/review", tags=["review"])
-templates = Jinja2Templates(directory=str(Path(__file__).resolve().parents[1] / "templates"))
+templates = create_templates(Path(__file__).resolve().parents[1] / "templates")
 
 
 async def _next_card(session: AsyncSession, learner_id: str) -> dict[str, str] | None:

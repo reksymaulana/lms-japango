@@ -1,11 +1,11 @@
 <div id="kanji-results">
 {% if kanji_list %}
-<section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-label="Daftar Kanji">
+<section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-label="{{ t.kanji_total }}">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <p class="text-sm text-slate-500">
-      {% if q %}{{ total }} Kanji cocok{% else %}Menampilkan {{ first_item }}–{{ last_item }} dari {{ total }} Kanji{% endif %}
+      {% if q %}{{ total }} {{ t.kanji_matches }}{% else %}{{ t.showing }} {{ first_item }}–{{ last_item }} {{ t.of }} {{ total }} {{ t.kanji_total }}{% endif %}
     </p>
-    <span class="text-xs font-medium text-slate-400">25 item per halaman</span>
+    <span class="text-xs font-medium text-slate-400">{{ t.items_per_page }}</span>
   </div>
   <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
     {% for kanji in kanji_list %}
@@ -14,51 +14,51 @@
         <div class="flex items-center gap-3">
           <span class="grid h-16 w-16 place-items-center rounded-2xl bg-indigo-50 text-4xl font-medium text-indigo-900 transition group-hover:bg-indigo-100">{{ kanji.character }}</span>
           <div>
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Arti utama</p>
-            <p class="mt-1 font-semibold text-slate-800">{{ kanji.meanings|join(", ") or "Belum tersedia" }}</p>
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ t.meaning_main }}</p>
+            <p class="mt-1 font-semibold text-slate-800">{{ kanji.meanings|join(", ") or t.not_available }}</p>
           </div>
         </div>
-        <button type="button" aria-label="Dengarkan {{ kanji.character }}" data-text="{{ kanji.character }}" onclick="speakJapanese(this.dataset.text)"
+        <button type="button" aria-label="{{ t.listen }} {{ kanji.character }}" data-text="{{ kanji.character }}" onclick="speakJapanese(this.dataset.text)"
                 class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-slate-200 text-indigo-600 transition hover:border-indigo-200 hover:bg-indigo-50">▶</button>
       </div>
       <details class="mt-4 border-t border-slate-100 pt-3">
         <summary class="flex cursor-pointer items-center justify-between text-sm font-semibold text-indigo-700">
-          Lihat cara baca <span class="text-slate-400 transition-transform">＋</span>
+          {{ t.reading_details }} <span class="text-slate-400 transition-transform">＋</span>
         </summary>
         <div class="mt-3 space-y-2 text-sm">
-          <p><span class="inline-block w-20 text-slate-500">Onyomi</span><span class="font-medium">{{ kanji.onyomi|join("、") or "—" }}</span></p>
-          <p><span class="inline-block w-20 text-slate-500">Kunyomi</span><span class="font-medium">{{ kanji.kunyomi|join("、") or "—" }}</span></p>
-          <p class="pt-1 text-xs text-slate-400">Jumlah goresan: {{ kanji.stroke_count or "—" }}</p>
+          <p><span class="inline-block w-20 text-slate-500">{{ t.onyomi }}</span><span class="font-medium">{{ kanji.onyomi|join("、") or "—" }}</span></p>
+          <p><span class="inline-block w-20 text-slate-500">{{ t.kunyomi }}</span><span class="font-medium">{{ kanji.kunyomi|join("、") or "—" }}</span></p>
+          <p class="pt-1 text-xs text-slate-400">{{ t.stroke_count }}: {{ kanji.stroke_count or "—" }}</p>
         </div>
       </details>
     </article>
     {% endfor %}
   </div>
   {% if pages > 1 %}
-  <nav class="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-4" aria-label="Halaman daftar Kanji">
+  <nav class="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-4" aria-label="{{ t.kanji_total }}">
     {% if page > 1 %}
     <a href="?level={{ level }}&q={{ q|urlencode }}&page={{ page - 1 }}" hx-get="/learning/kanji?level={{ level }}&q={{ q|urlencode }}&page={{ page - 1 }}" hx-target="#kanji-results" hx-swap="outerHTML" hx-push-url="true"
-       class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">← Sebelumnya</a>
+     class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">{{ t.previous }}</a>
     {% else %}<span></span>{% endif %}
-    <span class="text-sm font-semibold text-slate-600">Halaman {{ page }} / {{ pages }}</span>
+    <span class="text-sm font-semibold text-slate-600">{{ t.page }} {{ page }} / {{ pages }}</span>
     {% if page < pages %}
     <a href="?level={{ level }}&q={{ q|urlencode }}&page={{ page + 1 }}" hx-get="/learning/kanji?level={{ level }}&q={{ q|urlencode }}&page={{ page + 1 }}" hx-target="#kanji-results" hx-swap="outerHTML" hx-push-url="true"
-       class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Selanjutnya →</a>
+       class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">{{ t.next }}</a>
     {% endif %}
   </nav>
   {% endif %}
 </section>
 {% elif q %}
 <div class="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center">
-  <p class="font-semibold text-slate-800">Tidak ada Kanji {{ level }} yang cocok</p>
-  <p class="mt-1 text-sm text-slate-500">Coba karakter, arti, atau cara baca yang berbeda.</p>
+  <p class="font-semibold text-slate-800">{{ t.no_kanji_match }} {{ level }}</p>
+  <p class="mt-1 text-sm text-slate-500">{{ t.try_different_kanji }}</p>
 </div>
 {% else %}
 <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
   <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-indigo-50 text-2xl text-indigo-600">字</span>
-  <h2 class="mt-4 text-lg font-bold">Belum ada data Kanji {{ level }}</h2>
-  <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">Impor daftar Kanji menggunakan skrip seed, lalu kembali ke halaman ini.</p>
-  <a href="/" class="mt-5 inline-flex rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">Kembali ke beranda</a>
+  <h2 class="mt-4 text-lg font-bold">{{ t.no_kanji_title }} {{ level }}</h2>
+  <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">{{ t.no_kanji_description }}</p>
+  <a href="/" class="mt-5 inline-flex rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">{{ t.back_home }}</a>
 </div>
 {% endif %}
 </div>

@@ -30,6 +30,8 @@ Japango adalah open-source MVP untuk belajar bahasa Jepang dengan materi JLPT N5
 
    Untuk mengimpor level tertentu saja gunakan, misalnya, `--levels N5 N4`.
 
-Buka `http://localhost:8000`. Halaman mencakup dashboard, daftar Kanji, pencarian/cache kosakata Jisho, 18 pola tata bahasa starter N5–N3, dan sesi flashcard dengan SRS sederhana. Kanji dan tata bahasa dapat dicari pada semua data di level aktif, dengan 25 item per halaman; kosakata tersimpan juga memakai 25 item per halaman. Pencarian Jisho hanya berjalan setelah formulir dikirim dan mengikuti batas 10 item per halaman dari API. Materi tata bahasa ini adalah contoh awal, bukan daftar lengkap kurikulum JLPT. Identitas learner `demo` digunakan untuk progres lokal MVP; autentikasi dan administrasi materi belum termasuk.
+Buka `http://localhost:8000`. Antarmuka tersedia dalam Bahasa Indonesia dan English; pilih bahasa dari menu di kanan atas dan preferensi disimpan di browser. Materi starter tata bahasa juga memiliki terjemahan Inggris, sementara materi lain yang belum diterjemahkan tetap ditampilkan dalam bahasa sumbernya.
+
+Halaman mencakup dashboard, daftar Kanji, pencarian/cache kosakata Jisho, 18 pola tata bahasa starter N5–N3, dan sesi flashcard dengan SRS sederhana. Kanji dan tata bahasa dapat dicari pada semua data di level aktif, dengan 25 item per halaman; kosakata tersimpan juga memakai 25 item per halaman. Pencarian Jisho hanya berjalan setelah formulir dikirim dan mengikuti batas 10 item per halaman dari API. Materi tata bahasa ini adalah contoh awal, bukan daftar lengkap kurikulum JLPT. Identitas learner `demo` digunakan untuk progres lokal MVP; autentikasi dan administrasi materi belum termasuk.
 
 API kanjiapi.dev dan Jisho diakses langsung saat dibutuhkan. Jisho menyimpan hasil pencarian di PostgreSQL; data Kanji disimpan oleh skrip seed. Tailwind CDN cocok untuk prototipe, bukan konfigurasi build produksi.

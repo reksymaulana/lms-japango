@@ -3,16 +3,16 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
+from app.i18n import GRAMMAR_ENGLISH, create_templates, get_language
 from app.models import Bunpou, Kanji, Vocabulary
 from app.services.external_api import search_jisho
 
 router = APIRouter(prefix="/learning", tags=["learning"])
-templates = Jinja2Templates(directory=str(Path(__file__).resolve().parents[1] / "templates"))
+templates = create_templates(Path(__file__).resolve().parents[1] / "templates")
 PAGE_SIZE = 25
 JISHO_PAGE_SIZE = 10
 
@@ -166,11 +166,25 @@ async def grammar_list(
     query = q.strip()
     if query:
         pattern = f"%{query}%"
+        english_titles = [
+            title
+            for title, content in GRAMMAR_ENGLISH.items()
+            if get_language(request) == "en"
+            and query.casefold()
+            in " ".join(
+                [
+                    content["title"],
+                    content["explanation"],
+                    *content["examples"].values(),
+                ]
+            ).casefold()
+        ]
         filters.append(
             or_(
                 Bunpou.title.ilike(pattern),
                 Bunpou.explanation.ilike(pattern),
                 cast(Bunpou.examples, String).ilike(pattern),
+                *([Bunpou.title.in_(english_titles)] if english_titles else []),
             )
         )
     total = await session.scalar(

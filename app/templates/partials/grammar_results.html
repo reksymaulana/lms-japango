@@ -3,41 +3,42 @@
 <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
   <div class="mb-4 flex items-center justify-between gap-3">
     <p class="text-sm text-slate-500">
-      {% if q %}{{ total }} pola cocok{% else %}Menampilkan {{ first_item }}–{{ last_item }} dari {{ total }} pola{% endif %}
+      {% if q %}{{ total }} {{ t.pattern_matches }}{% else %}{{ t.showing }} {{ first_item }}–{{ last_item }} {{ t.of }} {{ total }} {{ t.patterns }}{% endif %}
     </p>
-    <span class="text-xs font-medium text-slate-400">25 item per halaman</span>
+    <span class="text-xs font-medium text-slate-400">{{ t.items_per_page }}</span>
   </div>
   <div class="space-y-5">
     {% for grammar in grammar_list %}
+    {% set english_content = grammar_english.get(grammar.title, {}) %}
     <article class="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-amber-200 sm:p-7">
       <div class="flex items-start gap-4">
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-50 text-lg font-bold text-amber-700">文</span>
         <div class="min-w-0">
-          <span class="rounded-md bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{{ level }} · POLA</span>
-          <h2 class="japanese-text mt-3 text-xl font-bold tracking-normal text-slate-900 sm:text-2xl">{{ grammar.title }}</h2>
-          <p class="mt-3 max-w-3xl text-base leading-8 text-slate-600">{{ grammar.explanation }}</p>
+          <span class="rounded-md bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700">{{ level }} · {{ t.grammar_pattern }}</span>
+          <h2 class="japanese-text mt-3 text-xl font-bold tracking-normal text-slate-900 sm:text-2xl">{% if lang == "en" %}{{ english_content.get("title", grammar.title) }}{% else %}{{ grammar.title }}{% endif %}</h2>
+          <p class="mt-3 max-w-3xl text-base leading-8 text-slate-600">{% if lang == "en" %}{{ english_content.get("explanation", grammar.explanation) }}{% else %}{{ grammar.explanation }}{% endif %}</p>
         </div>
       </div>
       {% if grammar.examples %}
       <details class="mt-6 border-t border-slate-100 pt-4">
         <summary class="flex cursor-pointer items-center justify-between rounded-xl px-3 py-3 text-sm font-bold text-amber-700 transition hover:bg-amber-50">
-          <span class="flex items-center gap-2"><span aria-hidden="true">✎</span> Coba contoh kalimat</span>
+          <span class="flex items-center gap-2"><span aria-hidden="true">✎</span> {{ t.try_example }}</span>
           <span class="text-lg text-slate-400 transition-transform">＋</span>
         </summary>
         <div class="mt-3 space-y-4">
           {% for example in grammar.examples %}
           <div class="rounded-2xl bg-amber-50/70 p-5 sm:p-6">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span class="text-xs font-bold uppercase tracking-[0.12em] text-amber-800">Contoh {{ loop.index }}</span>
+              <span class="text-xs font-bold uppercase tracking-[0.12em] text-amber-800">{{ t.example }} {{ loop.index }}</span>
               <button type="button" data-text="{{ example.japanese }}" onclick="speakJapanese(this.dataset.text)"
                       class="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-3 py-1.5 text-xs font-bold text-amber-800 transition hover:bg-amber-50">
-                ▶ Dengarkan
+                ▶ {{ t.listen }}
               </button>
             </div>
             <p lang="ja" class="japanese-text mt-4 text-xl font-medium text-slate-900 sm:text-2xl">{{ example.japanese }}</p>
             <details class="mt-4 border-t border-amber-200/70 pt-3">
-              <summary class="cursor-pointer text-sm font-semibold text-amber-800 underline decoration-amber-300 underline-offset-4">Saya sudah mencoba — tampilkan arti</summary>
-              <p class="mt-3 text-base leading-8 text-slate-700">{{ example.translation }}</p>
+              <summary class="cursor-pointer text-sm font-semibold text-amber-800 underline decoration-amber-300 underline-offset-4">{{ t.reveal_translation }}</summary>
+              <p class="mt-3 text-base leading-8 text-slate-700">{% if lang == "en" %}{{ english_content.get("examples", {}).get(example.japanese, example.translation) }}{% else %}{{ example.translation }}{% endif %}</p>
             </details>
           </div>
           {% endfor %}
@@ -48,29 +49,29 @@
     {% endfor %}
   </div>
   {% if pages > 1 %}
-  <nav class="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-4" aria-label="Halaman daftar tata bahasa">
+  <nav class="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-4" aria-label="{{ t.nav_grammar }}">
     {% if page > 1 %}
     <a href="?level={{ level }}&q={{ q|urlencode }}&page={{ page - 1 }}" hx-get="/learning/grammar?level={{ level }}&q={{ q|urlencode }}&page={{ page - 1 }}" hx-target="#grammar-results" hx-swap="outerHTML" hx-push-url="true"
-       class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">← Sebelumnya</a>
+       class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">{{ t.previous }}</a>
     {% else %}<span></span>{% endif %}
-    <span class="text-sm font-semibold text-slate-600">Halaman {{ page }} / {{ pages }}</span>
+    <span class="text-sm font-semibold text-slate-600">{{ t.page }} {{ page }} / {{ pages }}</span>
     {% if page < pages %}
     <a href="?level={{ level }}&q={{ q|urlencode }}&page={{ page + 1 }}" hx-get="/learning/grammar?level={{ level }}&q={{ q|urlencode }}&page={{ page + 1 }}" hx-target="#grammar-results" hx-swap="outerHTML" hx-push-url="true"
-       class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Selanjutnya →</a>
+       class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">{{ t.next }}</a>
     {% endif %}
   </nav>
   {% endif %}
 </section>
 {% elif q %}
 <div class="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center">
-  <p class="font-semibold text-slate-800">Pola tata bahasa {{ level }} tidak ditemukan</p>
-  <p class="mt-1 text-sm text-slate-500">Coba kata kunci atau contoh kalimat yang berbeda.</p>
+  <p class="font-semibold text-slate-800">{{ t.no_grammar_match }} {{ level }}</p>
+  <p class="mt-1 text-sm text-slate-500">{{ t.try_different_grammar }}</p>
 </div>
 {% else %}
 <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
   <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 text-2xl text-amber-700">文</span>
-  <h2 class="mt-4 text-lg font-bold">Materi {{ level }} belum tersedia</h2>
-  <p class="mt-2 text-sm text-slate-500">Pilih level lain atau kembali lagi nanti.</p>
+  <h2 class="mt-4 text-lg font-bold">{{ t.no_grammar_title }} {{ level }}</h2>
+  <p class="mt-2 text-sm text-slate-500">{{ t.no_grammar_description }}</p>
 </div>
 {% endif %}
 </div>
