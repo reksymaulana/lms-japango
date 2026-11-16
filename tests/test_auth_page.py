@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import httpx
 
+from app.auth import get_optional_current_account
 from app.main import app
 
 
@@ -78,4 +79,70 @@ class AuthPageTests(IsolatedAsyncioTestCase):
         self.assertIn('href="/sensei/quizzes"', sensei_navigation)
         self.assertIn('href="/sensei/students"', sensei_navigation)
         self.assertNotIn('href="/student/materials"', sensei_navigation)
+
+    async def test_public_pages_show_the_authenticated_role_navigation(self) -> None:
+        from starlette.requests import Request
+
+        from app.models import AppUser
+
+        class EmptyRows:
+            def all(self):
+                return []
+
+        class EmptySession:
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *_):
+                return None
+
+            async def execute(self, *_):
+                return EmptyRows()
+
+            async def scalar(self, *_):
+                return 0
+
+        async def use_role(request: Request, role: str) -> AppUser:
+            account = AppUser(auth_user_id=f"{role}-1", role=role)
+            request.state.account = account
+            return account
+
+        self.addCleanup(
+            app.dependency_overrides.pop,
+            get_optional_current_account,
+            None,
+        )
+        with patch("app.main.SessionLocal", side_effect=EmptySession):
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=app),
+                base_url="http://testserver",
+            ) as client:
+                for role, dashboard_path, other_path in (
+                    ("student", "/student", "/sensei"),
+                    ("sensei", "/sensei", "/student"),
+                ):
+                    async def authenticated_account(
+                        request: Request, role: str = role
+                    ) -> AppUser:
+                        return await use_role(request, role)
+
+                    app.dependency_overrides[get_optional_current_account] = (
+                        authenticated_account
+                    )
+                    home = await client.get("/")
+                    account_page = await client.get("/auth/signup")
+
+                    for response in (home, account_page):
+                        self.assertEqual(response.status_code, 200)
+                        navigation = (
+                            response.text.split(
+                                '<div id="primary-navigation"', 1
+                            )[1].split("</div>", 1)[0]
+                        )
+                        self.assertIn(f'href="{dashboard_path}"', navigation)
+                        self.assertNotIn(f'href="{other_path}"', navigation)
+                        self.assertIn(
+                            "Siswa" if role == "student" else "Sensei",
+                            navigation,
+                        )
 

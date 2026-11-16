@@ -15,6 +15,7 @@ from app.auth import (
     LoginRequired,
     RoleDenied,
     get_current_account,
+    get_optional_current_account,
 )
 from app.config import settings
 from app.database import SessionLocal, engine
@@ -73,7 +74,11 @@ async def auth_unavailable(_: Request, exc: AuthUnavailable) -> JSONResponse:
     return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
-@app.get("/auth/signup", response_class=HTMLResponse)
+@app.get(
+    "/auth/signup",
+    response_class=HTMLResponse,
+    dependencies=[Depends(get_optional_current_account)],
+)
 async def auth_signup(request: Request) -> HTMLResponse:
     return_to = request.query_params.get("next", "")
     if (
@@ -125,7 +130,11 @@ async def role_dashboard(
     return RedirectResponse(url=destination, status_code=303)
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get(
+    "/",
+    response_class=HTMLResponse,
+    dependencies=[Depends(get_optional_current_account)],
+)
 async def dashboard(request: Request) -> HTMLResponse:
     async with SessionLocal() as session:
         kanji_counts = dict(

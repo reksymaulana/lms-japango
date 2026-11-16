@@ -8,6 +8,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "id": {
         "language": "Bahasa",
         "nav_home": "Beranda",
+        "nav_dashboard": "Dashboard",
+        "nav_materials": "Materi",
+        "nav_quizzes": "Soal",
+        "nav_history": "Riwayat",
+        "nav_student_data": "Data siswa",
         "nav_kanji": "Kanji",
         "nav_vocabulary": "Kosakata",
         "nav_grammar": "Tata bahasa",
@@ -255,6 +260,11 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
     "en": {
         "language": "Language",
         "nav_home": "Home",
+        "nav_dashboard": "Dashboard",
+        "nav_materials": "Materials",
+        "nav_quizzes": "Quizzes",
+        "nav_history": "History",
+        "nav_student_data": "Student data",
         "nav_kanji": "Kanji",
         "nav_vocabulary": "Vocabulary",
         "nav_grammar": "Grammar",

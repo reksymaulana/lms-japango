@@ -138,10 +138,10 @@ async def get_or_create_account(
     return account
 
 
-async def get_current_account(
+async def _load_current_account(
     request: Request,
-    session: AsyncSession = Depends(get_session),
-    session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+    session: AsyncSession,
+    session_token: str | None,
 ) -> AppUser:
     if not session_token:
         raise LoginRequired
@@ -157,6 +157,26 @@ async def get_current_account(
         raise AccountDisabled
     request.state.account = account
     return account
+
+
+async def get_current_account(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+) -> AppUser:
+    return await _load_current_account(request, session, session_token)
+
+
+async def get_optional_current_account(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+) -> AppUser | None:
+    request.state.account = None
+    try:
+        return await _load_current_account(request, session, session_token)
+    except LoginRequired:
+        return None
 
 
 def require_role(role: str):
