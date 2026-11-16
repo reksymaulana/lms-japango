@@ -21,4 +21,8 @@ class AuthPageTests(IsolatedAsyncioTestCase):
         self.assertIn(f'data-auth-base-url="{auth_url}"', response.text)
         self.assertIn("/static/auth.bundle.js", response.text)
         self.assertIn("Create your Japango account", response.text)
+        self.assertIn('aria-controls="primary-navigation"', response.text)
+        self.assertIn('aria-label="Open navigation menu"', response.text)
+        self.assertIn('href="/learning/kanji"', response.text)
+        self.assertIn('href="/auth/signup"', response.text)
 

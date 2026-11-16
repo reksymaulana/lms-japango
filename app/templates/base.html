@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f7f4">
   <title>{% block title %}Japango{% endblock %}</title>
+  <noscript><style>@media (max-width: 1023px) { #primary-navigation { display: flex; flex-direction: column; } }</style></noscript>
   <script>
     const savedTheme = localStorage.getItem("japanese-lms-theme");
     if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
@@ -92,7 +93,7 @@
         </span>
         <span><span class="text-lg">Japango</span><span class="ml-2 hidden text-xs font-medium text-slate-400 sm:inline"> · {{ t.tagline }}</span></span>
       </a>
-      <div class="order-3 -mx-4 flex w-full min-w-0 items-center gap-1 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:order-none lg:mx-0 lg:w-auto lg:flex-1 lg:justify-center lg:overflow-visible lg:px-0 lg:pb-0">
+      <div id="primary-navigation" class="order-3 -mx-4 hidden w-full flex-col gap-1 border-t border-slate-100 px-4 pt-3 lg:order-none lg:mx-0 lg:flex lg:w-auto lg:flex-1 lg:flex-row lg:justify-center lg:gap-1 lg:border-t-0 lg:px-0 lg:pt-0">
         {% for href, label, active in [
           ("/", t.nav_home, current_path == "/"),
           ("/learning/kanji", t.nav_kanji, current_path == "/learning/kanji"),
@@ -102,12 +103,17 @@
           ("/auth/signup", t.nav_account, current_path.startswith("/auth"))
         ] %}
         <a href="{{ href }}" {% if active %}aria-current="page"{% endif %}
-           class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition {% if active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+           class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
           {{ label }}
         </a>
         {% endfor %}
       </div>
       <div class="order-2 ml-auto flex shrink-0 items-center gap-2 lg:order-none lg:ml-0">
+        <button id="navigation-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false"
+                aria-label="{{ t.open_navigation }}" data-open-label="{{ t.open_navigation }}" data-close-label="{{ t.close_navigation }}"
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-xl text-slate-700 transition hover:bg-slate-50 lg:hidden">
+          <span aria-hidden="true">☰</span>
+        </button>
         <form method="post" action="/language">
           <input type="hidden" name="return_to" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
           <label class="sr-only" for="language-select">{{ t.language }}</label>
@@ -162,6 +168,32 @@
       updateThemeControl();
     });
     updateThemeControl();
+
+    const navigationToggle = document.getElementById("navigation-toggle");
+    const primaryNavigation = document.getElementById("primary-navigation");
+    const navigationIcon = navigationToggle.querySelector("span");
+
+    function setNavigationOpen(isOpen) {
+      primaryNavigation.classList.toggle("hidden", !isOpen);
+      navigationToggle.setAttribute("aria-expanded", String(isOpen));
+      navigationToggle.setAttribute("aria-label", isOpen ? navigationToggle.dataset.closeLabel : navigationToggle.dataset.openLabel);
+      navigationIcon.textContent = isOpen ? "×" : "☰";
+    }
+
+    navigationToggle.addEventListener("click", () => {
+      setNavigationOpen(navigationToggle.getAttribute("aria-expanded") !== "true");
+    });
+    primaryNavigation.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLAnchorElement && window.matchMedia("(max-width: 1023px)").matches) {
+        setNavigationOpen(false);
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && navigationToggle.getAttribute("aria-expanded") === "true") {
+        setNavigationOpen(false);
+        navigationToggle.focus();
+      }
+    });
 
   </script>
   <span id="speech-unsupported-message" class="sr-only">{{ t.speech_unsupported }}</span>
