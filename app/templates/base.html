@@ -3,33 +3,77 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f4">
   <title>{% block title %}Japanese LMS{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    body { background: #f7f7f4; }
+    .htmx-indicator { opacity: 0; transition: opacity .18s ease; }
+    .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
+    [data-filter-item][hidden] { display: none; }
+    summary { list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+  </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900">
-  <nav class="bg-white border-b">
-    <div class="max-w-5xl mx-auto px-4 py-4 flex flex-wrap items-center gap-5">
-      <a class="font-bold text-indigo-700" href="/">Japanese LMS</a>
-      <a href="/learning/kanji">Kanji</a>
-      <a href="/learning/vocabulary">Kosakata</a>
-      <a href="/learning/grammar">Tata bahasa</a>
-      <a href="/review">Review</a>
-    </div>
-  </nav>
-  <main class="max-w-5xl mx-auto px-4 py-8">
+<body class="min-h-screen text-slate-900 antialiased">
+  {% set current_path = request.url.path %}
+  <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+    <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6" aria-label="Navigasi utama">
+      <a class="flex shrink-0 items-center gap-2.5 rounded-xl font-bold tracking-tight text-slate-900" href="/" aria-label="Japanese LMS, beranda">
+        <span class="grid h-10 w-10 place-items-center rounded-xl bg-indigo-600 text-lg text-white shadow-sm">日</span>
+        <span>Japanese<span class="text-indigo-600">LMS</span><span class="hidden text-xs font-medium text-slate-400 sm:inline"> · belajar sedikit demi sedikit</span></span>
+      </a>
+      <div class="flex items-center gap-1 overflow-x-auto">
+        {% for href, label, active in [
+          ("/", "Beranda", current_path == "/"),
+          ("/learning/kanji", "Kanji", current_path == "/learning/kanji"),
+          ("/learning/vocabulary", "Kosakata", current_path == "/learning/vocabulary"),
+          ("/learning/grammar", "Tata bahasa", current_path == "/learning/grammar"),
+          ("/review", "Review", current_path.startswith("/review"))
+        ] %}
+        <a href="{{ href }}" {% if active %}aria-current="page"{% endif %}
+           class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition {% if active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+          {{ label }}
+        </a>
+        {% endfor %}
+      </div>
+    </nav>
+  </header>
+  <main class="mx-auto min-h-[calc(100vh-140px)] max-w-6xl px-4 py-7 sm:px-6 sm:py-10">
     {% block content %}{% endblock %}
   </main>
+  <footer class="border-t border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs text-slate-500 sm:px-6">
+      <span>Japanese LMS <span class="text-slate-300">·</span> Belajar bahasa Jepang dengan ritmemu</span>
+      <span>JLPT N5–N3</span>
+    </div>
+  </footer>
   <script>
     function speakJapanese(text) {
       if (!("speechSynthesis" in window)) {
         alert("Browser ini tidak mendukung Web Speech API.");
         return;
       }
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "ja-JP";
       window.speechSynthesis.speak(utterance);
     }
+
+    function filterLearningItems(input, selector, countSelector, emptySelector) {
+      const query = input.value.trim().toLocaleLowerCase();
+      const items = [...document.querySelectorAll(selector)];
+      let visible = 0;
+      for (const item of items) {
+        const matches = item.dataset.search.toLocaleLowerCase().includes(query);
+        item.hidden = !matches;
+        if (matches) visible += 1;
+      }
+      document.querySelector(countSelector).textContent = `${visible} dari ${items.length}`;
+      document.querySelector(emptySelector).hidden = visible !== 0;
+    }
   </script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

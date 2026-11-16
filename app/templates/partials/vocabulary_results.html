@@ -1,15 +1,34 @@
 {% if vocabulary_list %}
+<div class="mb-3 flex items-center justify-between">
+  <h2 class="font-semibold text-slate-800">Hasil pencarian</h2>
+  <span class="text-xs text-slate-500">{{ vocabulary_list|length }} kata</span>
+</div>
 <div class="grid gap-3 sm:grid-cols-2">
   {% for item in vocabulary_list %}
-  <article class="rounded-xl bg-white border p-5">
-    <div class="flex items-center justify-between gap-3">
-      <h2 class="text-2xl font-semibold">{{ item.word }}</h2>
-      {% if item.reading %}<button class="text-sm text-indigo-700" data-text="{{ item.reading }}" onclick="speakJapanese(this.dataset.text)">▶ {{ item.reading }}</button>{% endif %}
+  <article class="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-sky-200 hover:shadow-md">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h3 class="text-2xl font-bold tracking-wide text-slate-900">{{ item.word }}</h3>
+        {% if item.reading %}<p class="mt-1 text-sm text-slate-500">{{ item.reading }}</p>{% endif %}
+      </div>
+      {% if item.reading %}<button type="button" aria-label="Dengarkan {{ item.reading }}" data-text="{{ item.reading }}" onclick="speakJapanese(this.dataset.text)"
+        class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sky-50 text-sky-700 transition hover:bg-sky-100">▶</button>{% endif %}
     </div>
-    <p class="mt-2 text-slate-600">{{ item.meanings|join(", ") or "Arti belum tersedia" }}</p>
+    <div class="mt-4 border-t border-slate-100 pt-3">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Arti</p>
+      <p class="mt-1 leading-6 text-slate-700">{{ item.meanings|join(", ") or "Arti belum tersedia" }}</p>
+    </div>
   </article>
   {% endfor %}
 </div>
 {% elif request.query_params.get("q") %}
-<p class="rounded-lg bg-white border p-4 text-slate-600">Tidak ada hasil ditemukan.</p>
+<div class="rounded-2xl border border-slate-200 bg-white px-5 py-8 text-center">
+  <span class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-xl text-slate-500">?</span>
+  <p class="mt-3 font-semibold text-slate-800">Belum menemukan kata itu</p>
+  <p class="mt-1 text-sm text-slate-500">Coba kata Jepang, romaji, atau arti bahasa Inggris yang berbeda.</p>
+</div>
+{% else %}
+<div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 px-5 py-8 text-center text-sm text-slate-500">
+  Hasil pencarian akan muncul di sini.
+</div>
 {% endif %}
