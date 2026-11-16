@@ -36,6 +36,8 @@ class AuthPageTests(IsolatedAsyncioTestCase):
         self.assertEqual(navigation.count("<a href="), 2)
         self.assertIn('href="/"', navigation)
         self.assertIn('href="/auth/signup"', navigation)
+        self.assertIn("Login/Register", navigation)
+        self.assertNotIn("Akun", navigation)
         self.assertNotIn('href="/learning/kanji"', navigation)
 
     async def test_navigation_is_role_specific(self) -> None:
@@ -69,12 +71,17 @@ class AuthPageTests(IsolatedAsyncioTestCase):
             return response.body.decode()
 
         student_navigation = await render_navigation("student")
+        self.assertIn("<details", student_navigation)
+        self.assertIn("Belajar", student_navigation)
         self.assertIn('href="/student/materials"', student_navigation)
         self.assertIn('href="/student/quizzes"', student_navigation)
         self.assertIn('href="/student/history"', student_navigation)
         self.assertNotIn('href="/sensei/materials"', student_navigation)
 
         sensei_navigation = await render_navigation("sensei")
+        self.assertIn("Pengelolaan", sensei_navigation)
+        self.assertIn("Akun", sensei_navigation)
+        self.assertNotIn("Login/Register", sensei_navigation)
         self.assertIn('href="/sensei/materials"', sensei_navigation)
         self.assertIn('href="/sensei/quizzes"', sensei_navigation)
         self.assertIn('href="/sensei/students"', sensei_navigation)

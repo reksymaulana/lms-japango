@@ -96,23 +96,26 @@
       <div id="primary-navigation" class="order-3 -mx-4 hidden w-full flex-col gap-1 border-t border-slate-100 px-4 pt-3 lg:order-none lg:mx-0 lg:flex lg:w-auto lg:flex-1 lg:flex-row lg:justify-center lg:gap-1 lg:border-t-0 lg:px-0 lg:pt-0">
         {% if current_user %}
           {% if current_user.role == "sensei" %}
-            <span class="px-3 py-2 text-xs font-bold uppercase tracking-wide text-indigo-600">{{ t.auth_role_sensei }}</span>
-            {% set navigation_items = [
-              ("/", t.nav_home, current_path == "/"),
-              ("/sensei", t.nav_dashboard, current_path == "/sensei"),
+            {% set role_label = t.auth_role_sensei %}
+            {% set dashboard_href = "/sensei" %}
+            {% set management_items = [
               ("/sensei/materials", t.manage_materials, current_path.startswith("/sensei/materials")),
+              ("/sensei/categories", t.manage_categories, current_path.startswith("/sensei/categories")),
               ("/sensei/quizzes", t.manage_quizzes, current_path.startswith("/sensei/quizzes")),
-              ("/sensei/students", t.nav_student_data, current_path.startswith("/sensei/students")),
               ("/sensei/grammar", t.manage_grammar, current_path.startswith("/sensei/grammar")),
-              ("/sensei/attempts", t.student_results, current_path.startswith("/sensei/attempts")),
+              ("/sensei/students", t.nav_student_data, current_path.startswith("/sensei/students")),
+              ("/sensei/attempts", t.student_results, current_path.startswith("/sensei/attempts"))
+            ] %}
+            {% set learning_items = [
               ("/learning/kanji", t.nav_kanji, current_path == "/learning/kanji"),
               ("/learning/vocabulary", t.nav_vocabulary, current_path == "/learning/vocabulary")
             ] %}
+            {% set management_active = current_path.startswith("/sensei/") %}
+            {% set learning_active = current_path.startswith("/learning/") %}
           {% else %}
-            <span class="px-3 py-2 text-xs font-bold uppercase tracking-wide text-indigo-600">{{ t.auth_role_student }}</span>
-            {% set navigation_items = [
-              ("/", t.nav_home, current_path == "/"),
-              ("/student", t.nav_dashboard, current_path == "/student"),
+            {% set role_label = t.auth_role_student %}
+            {% set dashboard_href = "/student" %}
+            {% set management_items = [
               ("/student/materials", t.nav_materials, current_path.startswith("/student/materials")),
               ("/student/quizzes", t.nav_quizzes, current_path.startswith("/student/quizzes")),
               ("/student/history", t.nav_history, current_path.startswith("/student/history")),
@@ -121,19 +124,63 @@
               ("/learning/grammar", t.nav_grammar, current_path == "/learning/grammar"),
               ("/review", t.nav_review, current_path.startswith("/review"))
             ] %}
+            {% set management_active = current_path.startswith("/student/") or current_path.startswith("/learning/") or current_path.startswith("/review") %}
+          {% endif %}
+          <span class="self-center rounded-lg bg-indigo-50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-indigo-700">{{ role_label }}</span>
+          <a href="/" {% if current_path == "/" %}aria-current="page"{% endif %}
+             class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if current_path == "/" %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+            {{ t.nav_home }}
+          </a>
+          <a href="{{ dashboard_href }}" {% if current_path == dashboard_href %}aria-current="page"{% endif %}
+             class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if current_path == dashboard_href %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+            {{ t.nav_dashboard }}
+          </a>
+          <details class="group relative">
+            <summary class="flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if management_active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+              {% if current_user.role == "sensei" %}{{ t.nav_management }}{% else %}{{ t.nav_learning }}{% endif %}
+              <span class="transition group-open:rotate-180" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="mt-1 flex flex-col gap-1 pl-3 lg:absolute lg:left-0 lg:top-full lg:z-40 lg:mt-2 lg:min-w-48 lg:rounded-xl lg:border lg:border-slate-200 lg:bg-white lg:p-2 lg:pl-2 lg:shadow-lg">
+              {% for href, label, active in management_items %}
+              <a href="{{ href }}" {% if active %}aria-current="page"{% endif %}
+                 class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition {% if active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+                {{ label }}
+              </a>
+              {% endfor %}
+            </div>
+          </details>
+          {% if current_user.role == "sensei" %}
+          <details class="group relative">
+            <summary class="flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if learning_active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+              {{ t.nav_learning }}
+              <span class="transition group-open:rotate-180" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="mt-1 flex flex-col gap-1 pl-3 lg:absolute lg:left-0 lg:top-full lg:z-40 lg:mt-2 lg:min-w-48 lg:rounded-xl lg:border lg:border-slate-200 lg:bg-white lg:p-2 lg:pl-2 lg:shadow-lg">
+              {% for href, label, active in learning_items %}
+              <a href="{{ href }}" {% if active %}aria-current="page"{% endif %}
+                 class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition {% if active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+                {{ label }}
+              </a>
+              {% endfor %}
+            </div>
+          </details>
           {% endif %}
         {% else %}
-          {% set navigation_items = [("/", t.nav_home, current_path == "/")] %}
+          <a href="/" {% if current_path == "/" %}aria-current="page"{% endif %}
+             class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if current_path == "/" %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+            {{ t.nav_home }}
+          </a>
+          <a href="/auth/signup" {% if current_path.startswith("/auth") %}aria-current="page"{% endif %}
+             class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if current_path.startswith("/auth") %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+            {{ t.nav_login_register }}
+          </a>
         {% endif %}
-        {% set navigation_items = navigation_items + [
-          ("/auth/signup", t.nav_account, current_path.startswith("/auth"))
-        ] %}
-        {% for href, label, active in navigation_items %}
-        <a href="{{ href }}" {% if active %}aria-current="page"{% endif %}
-           class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if active %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
-          {{ label }}
+        {% if current_user %}
+        <a href="/auth/signup" {% if current_path.startswith("/auth") %}aria-current="page"{% endif %}
+           class="whitespace-nowrap rounded-lg px-3 py-3 text-sm font-medium transition lg:py-2 {% if current_path.startswith("/auth") %}bg-indigo-50 text-indigo-700{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900{% endif %}">
+          {{ t.nav_account }}
         </a>
-        {% endfor %}
+        {% endif %}
       </div>
       <div class="order-2 ml-auto flex shrink-0 items-center gap-2 lg:order-none lg:ml-0">
         <button id="navigation-toggle" type="button" aria-controls="primary-navigation" aria-expanded="false"
