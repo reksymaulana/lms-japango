@@ -132,6 +132,29 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
         self.assertIn("Kelola soal", response.text)
         self.assertIn("Jawaban menunggu penilaian", response.text)
 
+    async def test_student_dashboard_shows_localized_n5_starting_path(self) -> None:
+        self.session.scalar_rows.extend([0] * 10)
+        await self.use_account(STUDENT)
+
+        indonesian_response = await self.client.get("/student")
+        english_response = await self.client.get(
+            "/student",
+            headers={"cookie": "lang=en"},
+        )
+
+        self.assertEqual(indonesian_response.status_code, 200)
+        self.assertIn("Jalur awal JLPT N5", indonesian_response.text)
+        self.assertIn("Mulai dari Kanji N5", indonesian_response.text)
+        self.assertIn('href="/learning/kanji?level=N5"', indonesian_response.text)
+        self.assertIn('href="/learning/grammar?level=N5"', indonesian_response.text)
+        self.assertIn('href="/learning/vocabulary"', indonesian_response.text)
+        self.assertIn('href="/review"', indonesian_response.text)
+        self.assertIn("Your JLPT N5 starting path", english_response.text)
+        self.assertIn(
+            "This is a starting point, not a complete JLPT curriculum.",
+            english_response.text,
+        )
+
     async def test_sensei_can_add_multiple_choice_question(self) -> None:
         self.session.objects[(Quiz, 5)] = Quiz(
             id=5, title="Basics", published=False, created_by="sensei-1"
