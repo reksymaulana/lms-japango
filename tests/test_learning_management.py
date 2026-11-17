@@ -133,7 +133,7 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
         self.assertIn("Jawaban menunggu penilaian", response.text)
 
     async def test_student_dashboard_shows_localized_n5_starting_path(self) -> None:
-        self.session.scalar_rows.extend([0] * 10)
+        self.session.scalar_rows.extend([0] * 14)
         await self.use_account(STUDENT)
 
         indonesian_response = await self.client.get("/student")
@@ -146,6 +146,8 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
         self.assertIn("Jalur awal JLPT N5", indonesian_response.text)
         self.assertIn("Mulai dari Kanji N5", indonesian_response.text)
         self.assertIn('href="/learning/kanji?level=N5"', indonesian_response.text)
+        self.assertIn("Data Kanji N5 belum tersedia.", indonesian_response.text)
+        self.assertNotIn('role="progressbar"', indonesian_response.text)
         self.assertIn('href="/learning/grammar?level=N5"', indonesian_response.text)
         self.assertIn('href="/learning/vocabulary"', indonesian_response.text)
         self.assertIn('href="/review"', indonesian_response.text)
@@ -154,6 +156,16 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
             "This is a starting point, not a complete JLPT curriculum.",
             english_response.text,
         )
+
+    async def test_student_dashboard_shows_personal_n5_kanji_review_progress(self) -> None:
+        self.session.scalar_rows.extend([0, 10, 3, 10, 5, 4, 0])
+        await self.use_account(STUDENT)
+
+        response = await self.client.get("/student")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("3 dari 10 Kanji N5 yang pernah direview", response.text)
+        self.assertIn('aria-valuenow="30"', response.text)
 
     async def test_sensei_can_add_multiple_choice_question(self) -> None:
         self.session.objects[(Quiz, 5)] = Quiz(

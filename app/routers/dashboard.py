@@ -37,6 +37,27 @@ async def student_dashboard(
             UserItemProgress.last_reviewed_at.is_not(None),
         )
     ) or 0
+    n5_kanji_count = await session.scalar(
+        select(func.count())
+        .select_from(Kanji)
+        .where(Kanji.level == "N5")
+    ) or 0
+    n5_reviewed_kanji_count = await session.scalar(
+        select(func.count())
+        .select_from(UserItemProgress)
+        .join(Kanji, Kanji.character == UserItemProgress.item_id)
+        .where(
+            UserItemProgress.learner_id == account.auth_user_id,
+            UserItemProgress.item_type == "kanji",
+            UserItemProgress.last_reviewed_at.is_not(None),
+            Kanji.level == "N5",
+        )
+    ) or 0
+    n5_kanji_review_percent = (
+        min(100, n5_reviewed_kanji_count * 100 // n5_kanji_count)
+        if n5_kanji_count
+        else 0
+    )
     kanji_count = await session.scalar(select(func.count()).select_from(Kanji)) or 0
     vocabulary_count = await session.scalar(
         select(func.count()).select_from(Vocabulary)
@@ -53,6 +74,9 @@ async def student_dashboard(
         context={
             "account": account,
             "reviewed_count": reviewed_count,
+            "n5_kanji_count": n5_kanji_count,
+            "n5_reviewed_kanji_count": n5_reviewed_kanji_count,
+            "n5_kanji_review_percent": n5_kanji_review_percent,
             "learning_counts": {
                 "kanji": kanji_count,
                 "vocabulary": vocabulary_count,
