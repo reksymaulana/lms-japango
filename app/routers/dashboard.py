@@ -37,12 +37,13 @@ async def student_dashboard(
             UserItemProgress.last_reviewed_at.is_not(None),
         )
     ) or 0
-    n5_kanji_count = await session.scalar(
+    n5_kanji_count_query = (
         select(func.count())
         .select_from(Kanji)
         .where(Kanji.level == "N5")
-    ) or 0
-    n5_reviewed_kanji_count = await session.scalar(
+        .scalar_subquery()
+    )
+    n5_reviewed_kanji_count_query = (
         select(func.count())
         .select_from(UserItemProgress)
         .join(Kanji, Kanji.character == UserItemProgress.item_id)
@@ -52,10 +53,48 @@ async def student_dashboard(
             UserItemProgress.last_reviewed_at.is_not(None),
             Kanji.level == "N5",
         )
-    ) or 0
+        .scalar_subquery()
+    )
+    n5_vocabulary_count_query = (
+        select(func.count())
+        .select_from(Vocabulary)
+        .where(Vocabulary.jlpt_level == "N5")
+        .scalar_subquery()
+    )
+    n5_reviewed_vocabulary_count_query = (
+        select(func.count())
+        .select_from(UserItemProgress)
+        .join(Vocabulary, Vocabulary.word == UserItemProgress.item_id)
+        .where(
+            UserItemProgress.learner_id == account.auth_user_id,
+            UserItemProgress.item_type == "vocabulary",
+            UserItemProgress.last_reviewed_at.is_not(None),
+            Vocabulary.jlpt_level == "N5",
+        )
+        .scalar_subquery()
+    )
+    progress_counts = await session.execute(
+        select(
+            n5_kanji_count_query,
+            n5_reviewed_kanji_count_query,
+            n5_vocabulary_count_query,
+            n5_reviewed_vocabulary_count_query,
+        )
+    )
+    (
+        n5_kanji_count,
+        n5_reviewed_kanji_count,
+        n5_vocabulary_count,
+        n5_reviewed_vocabulary_count,
+    ) = progress_counts.one()
     n5_kanji_review_percent = (
         min(100, n5_reviewed_kanji_count * 100 // n5_kanji_count)
         if n5_kanji_count
+        else 0
+    )
+    n5_vocabulary_review_percent = (
+        min(100, n5_reviewed_vocabulary_count * 100 // n5_vocabulary_count)
+        if n5_vocabulary_count
         else 0
     )
     kanji_count = await session.scalar(select(func.count()).select_from(Kanji)) or 0
@@ -77,6 +116,9 @@ async def student_dashboard(
             "n5_kanji_count": n5_kanji_count,
             "n5_reviewed_kanji_count": n5_reviewed_kanji_count,
             "n5_kanji_review_percent": n5_kanji_review_percent,
+            "n5_vocabulary_count": n5_vocabulary_count,
+            "n5_reviewed_vocabulary_count": n5_reviewed_vocabulary_count,
+            "n5_vocabulary_review_percent": n5_vocabulary_review_percent,
             "learning_counts": {
                 "kanji": kanji_count,
                 "vocabulary": vocabulary_count,

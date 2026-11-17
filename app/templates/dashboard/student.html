@@ -13,33 +13,46 @@
     <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{{ t.n5_path_description }}</p>
   </div>
   <ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-    {% for number, title, description, href, show_progress in [
-      ("01", t.n5_path_kanji_title, t.n5_path_kanji_description, "/learning/kanji?level=N5", true),
-      ("02", t.n5_path_grammar_title, t.n5_path_grammar_description, "/learning/grammar?level=N5", false),
-      ("03", t.n5_path_vocabulary_title, t.n5_path_vocabulary_description, "/learning/vocabulary", false),
-      ("04", t.n5_path_review_title, t.n5_path_review_description, "/review", false)
+    {% for number, title, description, href, progress_kind in [
+      ("01", t.n5_path_kanji_title, t.n5_path_kanji_description, "/learning/kanji?level=N5", "kanji"),
+      ("02", t.n5_path_grammar_title, t.n5_path_grammar_description, "/learning/grammar?level=N5", ""),
+      ("03", t.n5_path_vocabulary_title, t.n5_path_vocabulary_description, "/learning/vocabulary", "vocabulary"),
+      ("04", t.n5_path_review_title, t.n5_path_review_description, "/review", "")
     ] %}
     <li>
       <a href="{{ href }}" class="group block h-full rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-indigo-50 text-sm font-bold text-indigo-700">{{ number }}</span>
         <span class="mt-4 block font-semibold text-slate-900">{{ title }}</span>
         <span class="mt-1 block text-sm leading-5 text-slate-600">{{ description }}</span>
-        {% if show_progress %}
-          {% if n5_kanji_count %}
+        {% if progress_kind == "kanji" %}
+          {% set progress_total = n5_kanji_count %}
+          {% set progress_reviewed = n5_reviewed_kanji_count %}
+          {% set progress_percent = n5_kanji_review_percent %}
+          {% set progress_label = t.n5_kanji_reviewed %}
+          {% set progress_empty = t.n5_kanji_unavailable %}
+        {% elif progress_kind == "vocabulary" %}
+          {% set progress_total = n5_vocabulary_count %}
+          {% set progress_reviewed = n5_reviewed_vocabulary_count %}
+          {% set progress_percent = n5_vocabulary_review_percent %}
+          {% set progress_label = t.n5_vocabulary_reviewed %}
+          {% set progress_empty = t.n5_vocabulary_unavailable %}
+        {% endif %}
+        {% if progress_kind %}
+          {% if progress_total %}
           <span class="mt-4 block text-xs font-medium text-slate-600">
-            {{ n5_reviewed_kanji_count }} {{ t.of }} {{ n5_kanji_count }} {{ t.n5_kanji_reviewed }}
+            {{ progress_reviewed }} {{ t.of }} {{ progress_total }} {{ progress_label }}
           </span>
           <span class="mt-2 block h-2 overflow-hidden rounded-full bg-slate-100"
                 role="progressbar"
-                aria-label="{{ n5_reviewed_kanji_count }} {{ t.of }} {{ n5_kanji_count }} {{ t.n5_kanji_reviewed }}"
+                aria-label="{{ progress_reviewed }} {{ t.of }} {{ progress_total }} {{ progress_label }}"
                 aria-valuemin="0"
                 aria-valuemax="100"
-                aria-valuenow="{{ n5_kanji_review_percent }}">
+                aria-valuenow="{{ progress_percent }}">
             <span class="block h-full rounded-full bg-indigo-600 transition-[width]"
-                  style="width: {{ n5_kanji_review_percent }}%"></span>
+                  style="width: {{ progress_percent }}%"></span>
           </span>
           {% else %}
-          <span class="mt-4 block text-xs text-slate-500">{{ t.n5_kanji_unavailable }}</span>
+          <span class="mt-4 block text-xs text-slate-500">{{ progress_empty }}</span>
           {% endif %}
         {% endif %}
       </a>
