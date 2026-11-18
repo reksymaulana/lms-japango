@@ -1,16 +1,26 @@
 from math import ceil
 from pathlib import Path
+from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import get_current_account
+from app.auth import get_current_account, require_role
 from app.database import get_session
 from app.i18n import GRAMMAR_ENGLISH, create_templates, get_language
-from app.models import Bunpou, Kanji, Vocabulary
+from app.models import (
+    AppUser,
+    Bunpou,
+    GrammarProgress,
+    GrammarQuizAssignment,
+    Kanji,
+    Quiz,
+    Vocabulary,
+)
 from app.services.external_api import search_jisho
+from app.services.grammar_progress import completed_grammar_ids
 from app.services.translation_service import translate_meaning_groups
 
 router = APIRouter(
@@ -199,6 +209,7 @@ async def grammar_list(
     level: str = Query(default="N5", pattern=r"^N[3-5]$"),
     q: str = Query(default="", max_length=100),
     page: int = Query(default=1, ge=1),
+    account: AppUser = Depends(get_current_account),
     session: AsyncSession = Depends(get_session),
 ) -> HTMLResponse:
     filters = [Bunpou.level == level]
@@ -238,8 +249,32 @@ async def grammar_list(
         .offset((page - 1) * PAGE_SIZE)
         .limit(PAGE_SIZE)
     )
+    grammar_list = result.all()
+    completed_ids = await completed_grammar_ids(
+        session,
+        account.auth_user_id,
+        [grammar.id for grammar in grammar_list],
+    )
+    linked_quizzes: dict[int, list[Quiz]] = {}
+    if grammar_list:
+        quiz_rows = await session.execute(
+            select(GrammarQuizAssignment.grammar_id, Quiz)
+            .join(Quiz, Quiz.id == GrammarQuizAssignment.quiz_id)
+            .where(
+                GrammarQuizAssignment.grammar_id.in_(
+                    [grammar.id for grammar in grammar_list]
+                ),
+                Quiz.published.is_(True),
+            )
+            .order_by(Quiz.title)
+        )
+        for grammar_id, quiz in quiz_rows.all():
+            linked_quizzes.setdefault(grammar_id, []).append(quiz)
     context = {
-        "grammar_list": result.all(),
+        "grammar_list": grammar_list,
+        "completed_grammar_ids": completed_ids,
+        "linked_quizzes": linked_quizzes,
+        "account": account,
         "level": level,
         "q": query,
         "page": page,
@@ -257,3 +292,35 @@ async def grammar_list(
         ),
         context=context,
     )
+
+
+@router.post("/grammar/{grammar_id}/complete")
+async def complete_grammar(
+    grammar_id: int,
+    level: str = Form(pattern=r"^N[3-5]$"),
+    q: str = Form(default="", max_length=100),
+    page: int = Form(default=1, ge=1),
+    account: AppUser = Depends(require_role("student")),
+    session: AsyncSession = Depends(get_session),
+) -> RedirectResponse:
+    grammar = await session.get(Bunpou, grammar_id)
+    if grammar is None:
+        raise HTTPException(status_code=404, detail="Grammar item not found")
+    if grammar.level != level:
+        raise HTTPException(status_code=422, detail="Grammar level does not match")
+
+    progress = await session.get(
+        GrammarProgress,
+        (account.auth_user_id, grammar_id),
+    )
+    if progress is None:
+        session.add(
+            GrammarProgress(
+                learner_id=account.auth_user_id,
+                grammar_id=grammar_id,
+            )
+        )
+        await session.commit()
+
+    query = urlencode({"level": level, "q": q, "page": page})
+    return RedirectResponse(f"/learning/grammar?{query}", status_code=303)

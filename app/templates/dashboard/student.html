@@ -15,7 +15,7 @@
   <ol class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
     {% for number, title, description, href, progress_kind in [
       ("01", t.n5_path_kanji_title, t.n5_path_kanji_description, "/learning/kanji?level=N5", "kanji"),
-      ("02", t.n5_path_grammar_title, t.n5_path_grammar_description, "/learning/grammar?level=N5", ""),
+      ("02", t.n5_path_grammar_title, t.n5_path_grammar_description, "/learning/grammar?level=N5", "grammar"),
       ("03", t.n5_path_vocabulary_title, t.n5_path_vocabulary_description, "/learning/vocabulary", "vocabulary"),
       ("04", t.n5_path_review_title, t.n5_path_review_description, "/review", "")
     ] %}
@@ -36,6 +36,12 @@
           {% set progress_percent = n5_vocabulary_review_percent %}
           {% set progress_label = t.n5_vocabulary_reviewed %}
           {% set progress_empty = t.n5_vocabulary_unavailable %}
+        {% elif progress_kind == "grammar" %}
+          {% set progress_total = n5_grammar_count %}
+          {% set progress_reviewed = n5_completed_grammar_count %}
+          {% set progress_percent = n5_grammar_completion_percent %}
+          {% set progress_label = t.n5_grammar_completed %}
+          {% set progress_empty = t.n5_grammar_unavailable %}
         {% endif %}
         {% if progress_kind %}
           {% if progress_total %}

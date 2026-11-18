@@ -18,6 +18,7 @@ from app.models import (
     UserItemProgress,
     Vocabulary,
 )
+from app.services.grammar_progress import completed_grammar_ids
 
 router = APIRouter(tags=["dashboards"])
 templates = create_templates(Path(__file__).resolve().parents[1] / "templates")
@@ -97,6 +98,25 @@ async def student_dashboard(
         if n5_vocabulary_count
         else 0
     )
+    n5_grammar_ids = list(
+        (
+            await session.scalars(
+                select(Bunpou.id).where(Bunpou.level == "N5")
+            )
+        ).all()
+    )
+    n5_completed_grammar_ids = await completed_grammar_ids(
+        session,
+        account.auth_user_id,
+        n5_grammar_ids,
+    )
+    n5_grammar_count = len(n5_grammar_ids)
+    n5_completed_grammar_count = len(n5_completed_grammar_ids)
+    n5_grammar_completion_percent = (
+        n5_completed_grammar_count * 100 // n5_grammar_count
+        if n5_grammar_count
+        else 0
+    )
     kanji_count = await session.scalar(select(func.count()).select_from(Kanji)) or 0
     vocabulary_count = await session.scalar(
         select(func.count()).select_from(Vocabulary)
@@ -119,6 +139,9 @@ async def student_dashboard(
             "n5_vocabulary_count": n5_vocabulary_count,
             "n5_reviewed_vocabulary_count": n5_reviewed_vocabulary_count,
             "n5_vocabulary_review_percent": n5_vocabulary_review_percent,
+            "n5_grammar_count": n5_grammar_count,
+            "n5_completed_grammar_count": n5_completed_grammar_count,
+            "n5_grammar_completion_percent": n5_grammar_completion_percent,
             "learning_counts": {
                 "kanji": kanji_count,
                 "vocabulary": vocabulary_count,

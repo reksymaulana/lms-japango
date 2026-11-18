@@ -24,6 +24,12 @@
         {% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}
       </select>
     </label>
+    <label class="text-sm font-semibold">{{ t.grammar_quiz_label }}
+      <select name="grammar_id" class="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5">
+        <option value="">{{ t.no_grammar_quiz }}</option>
+        {% for grammar in grammar_list %}<option value="{{ grammar.id }}">{{ grammar.level }} · {{ grammar.title }}</option>{% endfor %}
+      </select>
+    </label>
     <button class="w-fit rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white" type="submit">{{ t.create_quiz }}</button>
   </form>
 </section>

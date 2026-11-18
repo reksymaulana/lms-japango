@@ -8,6 +8,8 @@ from app.main import app
 from app.models import (
     AppUser,
     Bunpou,
+    GrammarProgress,
+    GrammarQuizAssignment,
     LearningMaterial,
     Quiz,
     QuizAnswer,
@@ -55,6 +57,8 @@ class LearningSession:
         for item in self.added:
             if isinstance(item, QuizAttempt) and item.id is None:
                 item.id = 42
+            if isinstance(item, Quiz) and item.id is None:
+                item.id = 12
 
     async def commit(self):
         self.committed = True
@@ -124,6 +128,132 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
         grammar = next(item for item in self.session.added if isinstance(item, Bunpou))
         self.assertEqual(grammar.examples[0]["translation"], "Saya seorang siswa.")
 
+    async def test_student_can_mark_grammar_complete(self) -> None:
+        grammar = Bunpou(
+            id=8,
+            level="N5",
+            title="NはNです",
+            explanation="Identity pattern.",
+            examples=[],
+        )
+        self.session.objects[(Bunpou, 8)] = grammar
+        await self.use_account(STUDENT)
+
+        response = await self.client.post(
+            "/learning/grammar/8/complete",
+            data={"level": "N5", "q": "です", "page": "2"},
+        )
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(
+            response.headers["location"],
+            "/learning/grammar?level=N5&q=%E3%81%A7%E3%81%99&page=2",
+        )
+        progress = next(
+            item for item in self.session.added if isinstance(item, GrammarProgress)
+        )
+        self.assertEqual(progress.learner_id, STUDENT.auth_user_id)
+        self.assertEqual(progress.grammar_id, 8)
+        self.assertTrue(self.session.committed)
+
+    async def test_student_cannot_mark_another_level_grammar_complete(self) -> None:
+        self.session.objects[(Bunpou, 8)] = Bunpou(
+            id=8,
+            level="N4",
+            title="NはNです",
+            explanation="Identity pattern.",
+            examples=[],
+        )
+        await self.use_account(STUDENT)
+
+        response = await self.client.post(
+            "/learning/grammar/8/complete",
+            data={"level": "N5", "q": "", "page": "1"},
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(self.session.added, [])
+        self.assertFalse(self.session.committed)
+
+    async def test_sensei_cannot_mark_student_grammar_complete(self) -> None:
+        self.session.objects[(Bunpou, 8)] = Bunpou(
+            id=8,
+            level="N5",
+            title="NはNです",
+            explanation="Identity pattern.",
+            examples=[],
+        )
+        await self.use_account(SENSEI)
+
+        response = await self.client.post(
+            "/learning/grammar/8/complete",
+            data={"level": "N5", "q": "", "page": "1"},
+        )
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response.headers["location"], "/dashboard")
+        self.assertEqual(self.session.added, [])
+        self.assertFalse(self.session.committed)
+
+    async def test_grammar_page_displays_saved_completion(self) -> None:
+        grammar = Bunpou(
+            id=8,
+            level="N5",
+            title="NはNです",
+            explanation="Identity pattern.",
+            examples=[],
+        )
+        self.session.scalar_rows.extend([1, [grammar], [8]])
+        self.session.rows = [
+            (
+                8,
+                Quiz(
+                    id=17,
+                    title="Identity pattern quiz",
+                    published=True,
+                    created_by="sensei-1",
+                ),
+            )
+        ]
+        await self.use_account(STUDENT)
+
+        response = await self.client.get("/learning/grammar?level=N5")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Selesai", response.text)
+        self.assertNotIn("Tandai selesai", response.text)
+        self.assertIn('href="/student/quizzes/17"', response.text)
+
+    async def test_sensei_can_assign_quiz_to_grammar_pattern(self) -> None:
+        grammar = Bunpou(
+            id=8,
+            level="N5",
+            title="NはNです",
+            explanation="Identity pattern.",
+            examples=[],
+        )
+        self.session.objects[(Bunpou, 8)] = grammar
+        await self.use_account(SENSEI)
+
+        response = await self.client.post(
+            "/sensei/quizzes",
+            data={
+                "title": "Identity pattern",
+                "description": "",
+                "category_id": "",
+                "grammar_id": "8",
+            },
+        )
+
+        self.assertEqual(response.status_code, 303)
+        assignment = next(
+            item
+            for item in self.session.added
+            if isinstance(item, GrammarQuizAssignment)
+        )
+        self.assertEqual(assignment.quiz_id, 12)
+        self.assertEqual(assignment.grammar_id, 8)
+
     async def test_sensei_dashboard_renders_management_counts(self) -> None:
         self.session.scalar_rows.extend([4, 3, 2, 1, 1])
         await self.use_account(SENSEI)
@@ -136,11 +266,12 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
         self.assertIn("Jawaban menunggu penilaian", response.text)
 
     async def test_student_dashboard_shows_localized_n5_starting_path(self) -> None:
-        self.session.scalar_rows.extend([0] * 10)
+        self.session.scalar_rows.extend([0, [], 0, 0, 0, 0])
         self.session.rows = [(0, 0, 0, 0)]
         await self.use_account(STUDENT)
 
         indonesian_response = await self.client.get("/student")
+        self.session.scalar_rows.extend([0, [], 0, 0, 0, 0])
         english_response = await self.client.get(
             "/student",
             headers={"cookie": "lang=en"},
@@ -166,7 +297,7 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
         )
 
     async def test_student_dashboard_shows_personal_n5_kanji_review_progress(self) -> None:
-        self.session.scalar_rows.extend([0, 10, 20, 4, 0])
+        self.session.scalar_rows.extend([0, [1, 2, 3, 4], [1, 2], 10, 20, 4, 0])
         self.session.rows = [(10, 3, 20, 5)]
         await self.use_account(STUDENT)
 
@@ -180,6 +311,8 @@ class LearningManagementTests(IsolatedAsyncioTestCase):
             response.text,
         )
         self.assertIn('aria-valuenow="25"', response.text)
+        self.assertIn("2 dari 4 pola tata bahasa N5 selesai", response.text)
+        self.assertIn('aria-valuenow="50"', response.text)
 
     async def test_sensei_can_add_multiple_choice_question(self) -> None:
         self.session.objects[(Quiz, 5)] = Quiz(

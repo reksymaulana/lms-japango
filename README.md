@@ -17,6 +17,8 @@ Use flashcards with spaced repetition to revisit words over time. Your dashboard
 ## Made for students and teachers
 
 - **Students** can explore published lessons, take exercises, and follow their own progress.
+  Grammar patterns are complete when students mark them complete or pass a Sensei-linked
+  quiz with at least 70% after grading.
 - **Sensei (teachers)** can organize learning materials and quizzes, review student results, and provide feedback on written answers.
 
 Multiple-choice questions are checked automatically. Written answers can be reviewed by a Sensei.

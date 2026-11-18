@@ -13,6 +13,7 @@ from app.i18n import create_templates
 from app.models import (
     AppUser,
     Bunpou,
+    GrammarQuizAssignment,
     LearningCategory,
     LearningMaterial,
     Quiz,
@@ -58,6 +59,23 @@ async def _check_category(
 ) -> None:
     if category_id is not None and await session.get(LearningCategory, category_id) is None:
         raise HTTPException(status_code=422, detail="Category does not exist")
+
+
+def _parse_grammar_id(value: str) -> int | None:
+    if not value.strip():
+        return None
+    try:
+        grammar_id = int(value)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="Invalid grammar item") from exc
+    if grammar_id < 1:
+        raise HTTPException(status_code=422, detail="Invalid grammar item")
+    return grammar_id
+
+
+async def _check_grammar(session: AsyncSession, grammar_id: int | None) -> None:
+    if grammar_id is not None and await session.get(Bunpou, grammar_id) is None:
+        raise HTTPException(status_code=422, detail="Grammar item does not exist")
 
 
 def _parse_examples(value: str) -> list[dict[str, str]]:
@@ -389,12 +407,16 @@ async def manage_quizzes(
     categories = await session.scalars(
         select(LearningCategory).order_by(LearningCategory.name)
     )
+    grammar_list = await session.scalars(
+        select(Bunpou).order_by(Bunpou.level, Bunpou.title)
+    )
     return templates.TemplateResponse(
         request=request,
         name="sensei/quizzes.html",
         context={
             "quizzes": quizzes.all(),
             "categories": categories.all(),
+            "grammar_list": grammar_list.all(),
             "message": request.query_params.get("message"),
         },
     )
@@ -440,6 +462,7 @@ async def create_quiz(
     title: str = Form(),
     description: str = Form(default=""),
     category_id: str = Form(default=""),
+    grammar_id: str = Form(default=""),
     account: AppUser = Depends(get_current_account),
     session: AsyncSession = Depends(get_session),
 ) -> RedirectResponse:
@@ -450,12 +473,22 @@ async def create_quiz(
         category_id=_parse_category_id(category_id),
     )
     await _check_category(session, data.category_id)
+    selected_grammar_id = _parse_grammar_id(grammar_id)
+    await _check_grammar(session, selected_grammar_id)
     quiz = Quiz(
         **data.model_dump(),
         published=False,
         created_by=account.auth_user_id,
     )
     session.add(quiz)
+    if selected_grammar_id is not None:
+        await session.flush()
+        session.add(
+            GrammarQuizAssignment(
+                quiz_id=quiz.id,
+                grammar_id=selected_grammar_id,
+            )
+        )
     await session.commit()
     return RedirectResponse(f"/sensei/quizzes/{quiz.id}", status_code=303)
 
@@ -496,6 +529,10 @@ async def edit_quiz(
     categories = await session.scalars(
         select(LearningCategory).order_by(LearningCategory.name)
     )
+    grammar_list = await session.scalars(
+        select(Bunpou).order_by(Bunpou.level, Bunpou.title)
+    )
+    grammar_assignment = await session.get(GrammarQuizAssignment, quiz_id)
     edit_question = (
         await session.get(QuizQuestion, edit_question_id)
         if edit_question_id is not None
@@ -510,6 +547,8 @@ async def edit_quiz(
             "quiz": quiz,
             "questions": questions.all(),
             "categories": categories.all(),
+            "grammar_list": grammar_list.all(),
+            "grammar_assignment": grammar_assignment,
             "edit_question": edit_question,
             "message": request.query_params.get("message"),
         },
@@ -522,6 +561,7 @@ async def update_quiz(
     title: str = Form(),
     description: str = Form(default=""),
     category_id: str = Form(default=""),
+    grammar_id: str = Form(default=""),
     published: bool = Form(default=False),
     session: AsyncSession = Depends(get_session),
 ) -> RedirectResponse:
@@ -535,6 +575,8 @@ async def update_quiz(
         category_id=_parse_category_id(category_id),
     )
     await _check_category(session, data.category_id)
+    selected_grammar_id = _parse_grammar_id(grammar_id)
+    await _check_grammar(session, selected_grammar_id)
     if published:
         question_count = await session.scalar(
             select(func.count())
@@ -548,6 +590,19 @@ async def update_quiz(
             )
     for key, value in data.model_dump().items():
         setattr(quiz, key, value)
+    grammar_assignment = await session.get(GrammarQuizAssignment, quiz_id)
+    if selected_grammar_id is None:
+        if grammar_assignment is not None:
+            await session.delete(grammar_assignment)
+    elif grammar_assignment is None:
+        session.add(
+            GrammarQuizAssignment(
+                quiz_id=quiz_id,
+                grammar_id=selected_grammar_id,
+            )
+        )
+    else:
+        grammar_assignment.grammar_id = selected_grammar_id
     quiz.published = published
     await session.commit()
     return RedirectResponse(f"/sensei/quizzes/{quiz_id}?message=Quiz%20updated", status_code=303)

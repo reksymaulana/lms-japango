@@ -96,6 +96,31 @@ class Bunpou(Base):
     examples: Mapped[list[dict[str, str]]] = mapped_column(JSON, default=list)
 
 
+class GrammarQuizAssignment(Base):
+    __tablename__ = "grammar_quiz_assignments"
+
+    quiz_id: Mapped[int] = mapped_column(
+        ForeignKey("quizzes.id", ondelete="CASCADE"), primary_key=True
+    )
+    grammar_id: Mapped[int] = mapped_column(
+        ForeignKey("bunpou.id", ondelete="CASCADE"), index=True
+    )
+
+
+class GrammarProgress(Base):
+    __tablename__ = "grammar_progress"
+
+    learner_id: Mapped[str] = mapped_column(
+        ForeignKey("app_users.auth_user_id", ondelete="CASCADE"), primary_key=True
+    )
+    grammar_id: Mapped[int] = mapped_column(
+        ForeignKey("bunpou.id", ondelete="CASCADE"), primary_key=True
+    )
+    completed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class LearningCategory(Base):
     __tablename__ = "learning_categories"
 
